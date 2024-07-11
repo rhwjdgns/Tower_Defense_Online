@@ -1,3 +1,5 @@
+import { PacketType } from './protocol.js';
+
 export class Monster {
   constructor(path, monsterImages, level, monsterNumber) {
     // 생성자 안에서 몬스터의 속성을 정의한다고 생각하시면 됩니다!
@@ -25,27 +27,40 @@ export class Monster {
     this.attackPower = 10 + 1 * level; // 몬스터의 공격력 (기지에 가해지는 데미지)
   }
 
-  move() {
-    if (this.currentIndex < this.path.length - 1) {
-      const nextPoint = this.path[this.currentIndex + 1];
-      const deltaX = nextPoint.x - this.x;
-      const deltaY = nextPoint.y - this.y;
-      // 2차원 좌표계에서 두 점 사이의 거리를 구할 땐 피타고라스 정리를 활용하면 됩니다! a^2 = b^2 + c^2니까 루트를 씌워주면 되죠!
+  move() { //함수 로직 - 몬스터의 위치 업데이트,여러개의 좌표(point)로 구성된 경로를 순차적으로 이동, 현재 위치에서 다음 점으로 이동하기 위해 x,y 좌표를 반복해서 업데이트
+            //만약 몬스터가 경로의 마지막 점에 도달했다면, 기지를 공격하고 소멸, 기지 공격시 공격메서드 호출
+    if (this.currentIndex < this.path.length - 1) { //경로의 마지막 지점에 도달하지 않았을 경우
+      const nextPoint = this.path[this.currentIndex + 1]; // 다음 경로 가져오기
+      const deltaX = nextPoint.x - this.x; //x좌표 차이
+      const deltaY = nextPoint.y - this.y; //y 좌표 차이
+
+      // 2차원 좌표계에서 두 점 사이의 거리를 구할 땐 피타고라스 정리를 활용하면 됩니다! a^2 = b^2 + c^2니까 루트를 씌워주면 되죠! - 두점사이 거리계산
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
       if (distance < this.speed) {
-        // 거리가 속도보다 작으면 다음 지점으로 이동시켜주면 됩니다!
-        this.currentIndex++;
+        // 거리가 속도보다 작으면 다음 지점으로 이동시켜주면 됩니다! - 몬스터가 다음 지점에 도달할 수 있는 경우
+        this.currentIndex++; //현재 인덱스를 다음 지점으로 업데이트
       } else {
+        // 몬스터가 다음 지점에 도달할 수 없는 경우
         // 거리가 속도보다 크면 일정한 비율로 이동하면 됩니다. 이 때, 단위 벡터와 속도를 곱해줘야 해요!
         this.x += (deltaX / distance) * this.speed; // 단위 벡터: deltaX / distance
         this.y += (deltaY / distance) * this.speed; // 단위 벡터: deltaY / distance
       }
-      return false;
-    } else {
+      return false; //이동 완료, 기지에 도달하지 않음
+    } else { // 경로의 마지막 지점, 기지에 도달함
       this.hp = 0; // 몬스터는 이제 기지를 공격했으므로 자연스럽게 소멸해야 합니다.
-      return true;
+      this.attackBase(); //소멸하면서 기지를 공격하는 메서드 호출
+      return true; //이동 완료 기지에 도달함
     }
+  }
+
+  attackBase() {
+    let attackPacket = {
+      packetType: PacketType.C2S_MONSTER_ATTACK_BASE,
+      monsterId: this.monsterNumber,
+      damage: this.attackPower
+    };
+    serverSocket.send(ProtocolBuffer.encode(attackPacket));
   }
 
   draw(ctx, isOpponent = false) {
