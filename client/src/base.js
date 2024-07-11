@@ -9,11 +9,6 @@ export class Base {
     this.maxHp = maxHp; // 기지의 최대 HP
   }
 
-  updateHP(newHP) {
-    this.hp = newHP;
-    console.log(`Base HP updated to: ${this.hp}`);
-  }
-
   draw(ctx, baseImage, isOpponent = false) {
     ctx.drawImage(
       baseImage,
