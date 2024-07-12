@@ -2,7 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import initSocket from './init/socket.js';
-import UsersRouter from './routes/users.router.js';
+import UsersRouter from './routes/user.router.js';
 
 const app = express();
 const server = createServer(app);

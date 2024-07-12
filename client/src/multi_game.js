@@ -278,7 +278,7 @@ Promise.all([
     (img) => new Promise((resolve) => (img.onload = resolve))
   ),
 ]).then(() => {
-  serverSocket = io("http://15.165.15.118:3000", {
+  serverSocket = io("localhost:8080", {
     auth: {
       token: localStorage.getItem("token"),
     },
