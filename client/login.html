@@ -48,14 +48,17 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        fetch('http://localhost:8080/login', {
+        fetch('http://localhost:8080/api/sign-in', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({
+            userId: username,
+            password: password,
+          }),
         })
-          .then((response) => response.json())
+          .then(async (response) => response.json())
           .then((data) => {
             if (data.token) {
               // 토큰은 브라우저의 localStorage에 저장하고 있다가 필요할 때 사용합니다!

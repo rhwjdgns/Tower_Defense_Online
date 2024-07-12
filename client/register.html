@@ -48,7 +48,7 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        fetch('http://localhost:8080/register/api/sign-up', {
+        fetch('http://localhost:8080/api/sign-up', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -58,12 +58,14 @@
             password: password,
           }),
         })
-          .then((response) => {
-            if (response.status === 201) {
+          .then(async (response) => {
+            if (response.ok) {
+              const responseData = await response.json();
               alert('회원가입 성공');
               window.location.href = 'index.html';
             } else {
-              alert('회원가입 실패');
+              const responseData = await response.json();
+              alert(responseData.errorMessage);
             }
           })
           .catch((error) => {
