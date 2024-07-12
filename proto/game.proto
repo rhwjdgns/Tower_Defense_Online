@@ -193,4 +193,3 @@ message GamePacket {
         S2C_GameSync game_sync = 18;
         // 추가 패킷 타입들 여기에 추가하기
     }
-}
