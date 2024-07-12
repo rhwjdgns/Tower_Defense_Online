@@ -1,6 +1,11 @@
 const { sendGameSync } = require('./gameSyncHandler');
 const { PacketType } = require('../constants');
-const { createMonsters, getMonsters, setMonster } = require('../models/monster.model.js');
+const {
+  createMonsters,
+  getMonsters,
+  setMonster,
+  removeMonster,
+} = require('../models/monster.model.js');
 
 // 아군 몬스터 사망
 function handleDieMonster(uuid, payload) {
@@ -9,7 +14,11 @@ function handleDieMonster(uuid, payload) {
     return { status: 'fail', message: 'Monsters not found' };
   }
 
-  setMonster(uuid, payload.monsterId, payload.monsterLevel);
+  const result = removeMonster(uuid, payload.monsterId);
+  if (result.status === 'fail') {
+    return result;
+  }
+
   sendGameSync(uuid, {
     packetType: PacketType.C2S_DIE_MONSTER,
     monsterId: payload.monsterId,
@@ -26,7 +35,11 @@ function handleEnemyDieMonster(uuid, payload) {
     return { status: 'fail', message: 'Monsters not found' };
   }
 
-  setMonster(uuid, payload.monsterId, payload.monsterLevel);
+  const result = removeMonster(uuid, payload.monsterId);
+  if (result.status === 'fail') {
+    return result;
+  }
+
   sendGameSync(uuid, {
     packetType: PacketType.S2C_ENEMY_DIE_MONSTER,
     monsterId: payload.monsterId,
@@ -38,12 +51,9 @@ function handleEnemyDieMonster(uuid, payload) {
 
 // 아군 몬스터 생성
 function handleSpawnMonster(uuid, payload) {
-  const monsters = createMonsters(uuid);
-  if (!monsters) {
-    return { status: 'fail', message: 'Monsters not found' };
-  }
+  createMonsters(uuid);
+  setMonster(uuid, payload.monsterId, payload.monsterLevel);
 
-  createMonsters(uuid, payload.monsterId, payload.monsterLevel);
   sendGameSync(uuid, {
     packetType: PacketType.C2S_SPAWN_MONSTER,
     monsterId: payload.monsterId,
@@ -55,12 +65,9 @@ function handleSpawnMonster(uuid, payload) {
 
 // 적군 몬스터 생성
 function handleEnemySpawnMonster(uuid, payload) {
-  const monsters = createMonsters(uuid);
-  if (!monsters) {
-    return { status: 'fail', message: 'Monsters not found' };
-  }
+  createMonsters(uuid);
+  setMonster(uuid, payload.monsterId, payload.monsterLevel);
 
-  createMonsters(uuid, payload.monsterId, payload.monsterLevel);
   sendGameSync(uuid, {
     packetType: PacketType.S2C_ENEMY_SPAWN_MONSTER,
     monsterId: payload.monsterId,
