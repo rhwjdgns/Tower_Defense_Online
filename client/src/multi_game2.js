@@ -22,7 +22,7 @@ const loader = document.getElementsByClassName('loader')[0];
 const NUM_OF_MONSTERS = 5; // 몬스터 개수
 // 게임 데이터
 let towerCost = 0; // 타워 구입 비용
-let monsterSpawnInterval = 0; // 몬스터 생성 주기
+let monsterSpawnInterval = 1; // 몬스터 생성 주기
 
 // 유저 데이터
 let userGold = 0; // 유저 골드
@@ -167,6 +167,30 @@ function spawnMonster() {
   const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(newMonster);
 
+  const serverSocket = io('http://localhost:8080/', {
+    auth: {
+      token: localStorage.getItem('token'),
+    },
+  });
+
+  serverSocket.emit('spawnMonster', {
+    monsterId: newMonster.Id,
+    x: newMonster.x,
+    y: newMonster.y,
+    level: newMonster.level,
+  });
+
+  serverSocket.on('spawnMonster', (data) => {
+    const { monsterId, x, y, level } = data;
+
+    const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
+    newMonster.id = monsterId;
+    newMonster.x = x;
+    newMonster.y = y;
+    monsters.push(newMonster);
+
+    newMonster.draw(ctx);
+  });
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 
