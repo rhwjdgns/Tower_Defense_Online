@@ -14,21 +14,21 @@ router.post('/sign-up', async (req, res, next) => {
     const { userId, password } = req.body;
     const isExistUser = await prisma.user.findFirst({
       where: {
-        userId,
+        userId: userId,
       },
     });
-
+    console.log(isExistUser);
     if (isExistUser) {
-      return res.status(409).json({ message: '이미 존재하는 아이디입니다.' });
+      return res.status(409).json({ errorMessage: '이미 존재하는 사용자입니다.' });
     }
 
     const vaildId = /^[a-z0-9]+$/;
-    if (!vaildId.test(id)) {
-      return res.status(400).json({ message: '아이디는 소문자와 숫자만 사용할 수 있습니다.' });
+    if (!vaildId.test(userId)) {
+      return res.status(400).json({ errorMessage: '아이디는 소문자와 숫자만 사용할 수 있습니다.' });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: '비밀번호는 최소 6자 이상이어야 합니다.' });
+      return res.status(400).json({ errorMessage: '비밀번호는 최소 6자 이상이어야 합니다.' });
     }
 
     // 사용자 비밀번호를 암호화합니다.
@@ -36,8 +36,12 @@ router.post('/sign-up', async (req, res, next) => {
 
     // Users 테이블에 사용자를 추가합니다.
     const user = await prisma.user.create({
-      data: { userId, userPw: hashedPassword },
+      data: {
+        userId: userId,
+        userPw: hashedPassword,
+      },
     });
+    console.log("생성완료",user);
   } catch (e) {
     console.log(e);
   }
