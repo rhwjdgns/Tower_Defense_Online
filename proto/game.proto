@@ -18,6 +18,7 @@ enum PacketType {
     S2C_MATCH_FOUND_NOTIFICATION = 14;
     C2S_MONSTER_ATTACK_BASE = 15;
     S2C_UPDATE_BASE_HP = 16;
+    S2C_GAMESYNC = 17;
 }
 // 좌표
 message Coordinates {
@@ -42,11 +43,11 @@ message PacketHeader {
 // 몬스터가 기지를 공격
 message C2S_MonsterAttackBase {
     string monsterId = 1;
-    string damage = 2;
+    uint32 damage = 2;
 }
 // 기지 HP 업데이트
 message S2C_UpdateBaseHp {
-    string hp = 1;
+    uint32 hp = 1;
 }
 // 요청 패킷: 대결 신청 (클라이언트 → 서버)
 message C2S_MatchRequest {
@@ -76,13 +77,14 @@ message MonsterSpawnPoint {
     uint32 y = 2;
 }
 // 몬스터 생성 요청 패킷
-message C2S_SpawnMonter {
+message C2S_SpawnMonster {
     MonsterSpawnPoint position = 1;
 }
 // 몬스터 사망 요청 패킷
 message C2S_DieMonster {
     uint32 monsterIndex = 1;
 }
+// 게임 종료 요청 패킷
 message C2S_GameEndRequest {
     string userId = 1;  // 유저 아이디
     uint32 finalScore = 2;  // 최종 점수
@@ -112,10 +114,35 @@ message S2C_EnemySpawnMonster {
 message S2C_EnemyDieMonster {
     uint32 monsterIndex = 1;
 }
+// 게임 오버 통지 패킷
 message S2C_GameOverNotification {
     bool isWin = 1;  // 승리 여부
     string message = 2;  // 게임 오버 메시지
     GlobalFailCode fail_code = 3;
+}
+// 상태 동기화 패킷
+message S2C_GameSync {
+    PlayerData playerData = 1;
+    PlayerData opponentData = 2;
+}
+message PlayerData {
+    uint32 userGold = 1;
+    uint32 baseHp = 2;
+    uint32 score = 3;
+    repeated MonsterInfo monsters = 4;
+    repeated TowerInfo towers = 5;
+}
+// 몬스터 정보
+message MonsterInfo {
+    uint32 x = 1;
+    uint32 y = 2;
+    uint32 hp = 3;
+    uint32 monsterNumber = 4;
+}
+// 타워 정보
+message TowerInfo {
+    uint32 x = 1;
+    uint32 y = 2;
 }
 // 게임 패킷 (헤더 + 페이로드)
 message GamePacket {
@@ -129,7 +156,7 @@ message GamePacket {
         C2S_TowerAttack tower_attack = 7;
         S2C_EnemyTowerSpawn enemy_tower_spawn = 8;
         S2C_EnemyTowerAttack enemy_tower_attack = 9;
-        C2S_SpawnMonter spawn_monster = 10;
+        C2S_SpawnMonster spawn_monster = 10;
         C2S_DieMonster die_monster = 11;
         S2C_EnemySpawnMonster enemy_spawn_monster = 12;
         S2C_EnemyDieMonster enemy_die_monster = 13;
@@ -137,6 +164,7 @@ message GamePacket {
         S2C_MatchFoundNotification match_found_notification = 15;
         C2S_MonsterAttackBase monster_attack_base = 16;
         S2C_UpdateBaseHp update_base_hp = 17;
+        S2C_GameSync game_sync = 18;
         // 추가 패킷 타입들 여기에 추가하기
     }
 }

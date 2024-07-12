@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int             @id @default(autoincrement())
+  password String          @db.VarChar(191)
+  userInfo UserInfo?
+  GameResultLogsAsPlayer1 GameResultLog[] @relation("Player1")
+  GameResultLogsAsPlayer2 GameResultLog[] @relation("Player2")
+}
+
+model UserInfo {
+  userId    Int     @unique
+  highscore String? @db.VarChar(45)
+  win       String? @db.VarChar(45)
+  lose      String? @db.VarChar(45)
+  User      User    @relation(fields: [userId], references: [id])
+}
+
+model GameResultLog {
+  game_id       Int     @id @default(autoincrement())
+  player_1      Int
+  player_1_score Int
+  start_time    DateTime @default(now()) @db.DateTime(3)
+  player_2      Int?
+  win           Int?
+  end_time      DateTime @default(now()) @db.DateTime(3)
+  player_2_score Int?
+  User_1        User   @relation("Player1", fields: [player_1], references: [id])
+  User_2        User?  @relation("Player2", fields: [player_2], references: [id])
+}
