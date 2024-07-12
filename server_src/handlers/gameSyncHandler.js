@@ -8,30 +8,30 @@ function sendGameSync(game) {
       userGold: game.player1.gold,
       baseHp: game.player1.baseHp,
       score: game.player1.score,
-      monsters: game.player1.monsters.map(monster => ({
+      monsters: game.player1.monsters.map((monster) => ({
         x: monster.x,
         y: monster.y,
         hp: monster.hp,
-        monsterNumber: monster.monsterNumber
+        monsterNumber: monster.monsterNumber,
       })),
-      towers: game.player1.towers.map(tower => ({
+      towers: game.player1.towers.map((tower) => ({
         x: tower.x,
-        y: tower.y
-      }))
+        y: tower.y,
+      })),
     },
     opponentData: {
       baseHp: game.player2.baseHp,
-      monsters: game.player2.monsters.map(monster => ({
+      monsters: game.player2.monsters.map((monster) => ({
         x: monster.x,
         y: monster.y,
         hp: monster.hp,
-        monsterNumber: monster.monsterNumber
+        monsterNumber: monster.monsterNumber,
       })),
-      towers: game.player2.towers.map(tower => ({
+      towers: game.player2.towers.map((tower) => ({
         x: tower.x,
-        y: tower.y
-      }))
-    }
+        y: tower.y,
+      })),
+    },
   };
 
   game.player1.socket.emit('gameSync', packet);

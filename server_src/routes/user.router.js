@@ -10,33 +10,37 @@ const router = express.Router();
 
 /** 사용자 회원가입 API **/
 router.post('/sign-up', async (req, res, next) => {
-  const { id, password } = req.body;
-  const isExistUser = await prisma.User.findFirst({
-    where: {
-      id,
-    },
-  });
+  try {
+    const { userId, password } = req.body;
+    const isExistUser = await prisma.user.findFirst({
+      where: {
+        userId,
+      },
+    });
 
-  if (isExistUser) {
-    return res.status(409).json({ message: '이미 존재하는 아이디입니다.' });
+    if (isExistUser) {
+      return res.status(409).json({ message: '이미 존재하는 아이디입니다.' });
+    }
+
+    const vaildId = /^[a-z0-9]+$/;
+    if (!vaildId.test(id)) {
+      return res.status(400).json({ message: '아이디는 소문자와 숫자만 사용할 수 있습니다.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: '비밀번호는 최소 6자 이상이어야 합니다.' });
+    }
+
+    // 사용자 비밀번호를 암호화합니다.
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Users 테이블에 사용자를 추가합니다.
+    const user = await prisma.user.create({
+      data: { userId, userPw: hashedPassword },
+    });
+  } catch (e) {
+    console.log(e);
   }
-
-  const vaildId = /^[a-z0-9]+$/;
-  if (!vaildId.test(id)) {
-    return res.status(400).json({ message: '아이디는 소문자와 숫자만 사용할 수 있습니다.' });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({ message: '비밀번호는 최소 6자 이상이어야 합니다.' });
-  }
-
-  // 사용자 비밀번호를 암호화합니다.
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // Users 테이블에 사용자를 추가합니다.
-  const user = await prisma.User.create({
-    data: { id, password: hashedPassword },
-  });
 
   return res.status(200).json({ message: '회원가입이 완료되었습니다.' });
 });

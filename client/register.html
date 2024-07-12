@@ -48,12 +48,15 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        fetch('http://localhost:8080/register', {
+        fetch('http://localhost:8080/register/api/sign-up', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({
+            userId: username,
+            password: password,
+          }),
         })
           .then((response) => {
             if (response.status === 201) {

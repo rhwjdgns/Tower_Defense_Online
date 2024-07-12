@@ -8,8 +8,8 @@ datasource db {
 }
 
 model user {
-  userId       Int               @id @default(autoincrement()) @map("id")
-  userPw       String            @db.VarChar(191) @map("password")
+  userId       String            @id @map("userId")
+  userPw       String            @db.VarChar(191) @map("userPw")
 
   userInfo     userInfo?         @relation("UserInfoRelation")
   gameResults1 game_result_log[] @relation("Player1")
@@ -17,7 +17,8 @@ model user {
 }
 
 model userInfo {
-  userId       Int               @id @map("userId")
+  userInfoId   Int               @id @default(autoincrement()) @map("userInfoId")
+  userId       String            @unique @map("userId")
   highScore    String?           @db.VarChar(45) @map("highscore")
   win          String?           @db.VarChar(45)
   lose         String?           @db.VarChar(45)
@@ -27,10 +28,10 @@ model userInfo {
 
 model game_result_log {
   gameId       Int               @id @default(autoincrement()) @map("game_id")
-  player1      Int               @map("player_1")
+  player1      String            @map("player_1")
   player1Score Int               @map("1_score")
   startTime    DateTime?         @default(now()) @map("start_time")
-  player2      Int?              @map("player_2")
+  player2      String?           @map("player_2")
   win          Int?
   endTime      DateTime?         @default(now()) @map("end_time")
   player2Score Int?              @map("2_score")
