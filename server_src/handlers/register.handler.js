@@ -19,13 +19,13 @@ const registerHandler = async (io) => {
     // 유저 데이터에 uuid 가 null 이면 uuid 발급 후 db에 저장
     if (userData.uuid === null) {
       userUUID = uuidv4();
-      await updateUser({ uuid: userUUID, socketId: socket.id, token }); // 사용자 추가
-      addUser({ uuid: userUUID, socketId: socket.id }); // 사용자 추가
+      //await updateUser({ uuid: userUUID, socketId: socket.id, token }); // 사용자 추가
+      //addUser({ uuid: userUUID, socketId: socket.id }); // 사용자 추가
     }
     // 유저 데이터에 uuid 가 null 이 아니면 uuid 가져오기
     else {
       userUUID = userData.uuid;
-      addUser({ uuid: userUUID, socketId: socket.id }); // 사용자 추가
+      //addUser({ uuid: userUUID, socketId: socket.id }); // 사용자 추가
     }
 
     // 접속시 유저 정보 생성 이벤트 처리

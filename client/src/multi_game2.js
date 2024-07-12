@@ -316,16 +316,31 @@ Promise.all([
     if (isWin) {
       winSound.play().then(() => {
         alert('당신이 게임에서 승리했습니다!');
-        // TODO. 게임 종료 이벤트 전송
-        location.reload();
+        sendGameEnd();
       });
     } else {
       loseSound.play().then(() => {
         alert('아쉽지만 대결에서 패배하셨습니다! 다음 대결에서는 꼭 이기세요!');
-        // TODO. 게임 종료 이벤트 전송
-        location.reload();
+        sendGameEnd();
       });
     }
+  });
+
+  // 상태 동기화 이벤트 수신
+  serverSocket.on('gameSync', (data) => {
+    const { playerData, opponentData } = data;
+
+    // 유저 데이터 동기화
+    userGold = playerData.userGold;
+    base.hp = playerData.baseHp;
+    score = playerData.score;
+    monsters = playerData.monsters;
+    towers = playerData.towers;
+
+    // 상대방 데이터 동기화
+    opponentBase.hp = opponentData.baseHp;
+    opponentMonsters = opponentData.monsters;
+    opponentTowers = opponentData.towers;
   });
 });
 
@@ -342,3 +357,14 @@ buyTowerButton.style.display = 'none';
 buyTowerButton.addEventListener('click', placeNewTower);
 
 document.body.appendChild(buyTowerButton);
+
+// 게임 종료 패킷 전송
+function sendGameEnd() {
+  const packet = {
+    packetType: 3, // C2S_GAME_END_REQUEST
+    userId: localStorage.getItem('userId'), // JWT 토큰을 사용할 경우 ID는 서버에서 해석함
+    finalScore: score,
+  };
+
+  serverSocket.emit('gameEnd', packet);
+}

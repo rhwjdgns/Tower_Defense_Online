@@ -1,10 +1,12 @@
-import { DieMonster, EnemyDieMonster, EnemySpawnMonster, SpawnMonster } from './monster.handler.js';
+const { PacketType } = require('../constants');
+const { handleLogin, handleGameEnd, handleGameSync, handleGameOver } = require('./handlers');
 
-const handlerMappings = {
-  10: SpawnMonster,
-  11: DieMonster,
-  12: EnemySpawnMonster,
-  13: EnemyDieMonster,
+const handlerMapping = {
+  [PacketType.C2S_LOGIN_REQUEST]: handleLogin,
+  [PacketType.C2S_GAME_END_REQUEST]: handleGameEnd,
+  [PacketType.C2S_GAMESYNC_REQUEST]: handleGameSync,
+  [PacketType.S2C_GAME_OVER_NOTIFICATION]: handleGameOver,
+  // 추가 핸들러 매핑
 };
 
-export default handlerMappings;
+module.exports = handlerMapping;
