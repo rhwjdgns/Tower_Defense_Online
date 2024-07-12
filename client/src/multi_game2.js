@@ -343,7 +343,25 @@ Promise.all([
       });
     }
   });
+  // 상태 동기화 이벤트 수신
+  serverSocket.on("gameSync", (data) => {
+    const { playerData, opponentData } = data;
+
+    // 유저 데이터 동기화
+    userGold = playerData.userGold;
+    base.hp = playerData.baseHp;
+    score = playerData.score;
+    monsters = playerData.monsters;
+    towers = playerData.towers;
+
+    // 상대방 데이터 동기화
+    opponentBase.hp = opponentData.baseHp;
+    opponentMonsters = opponentData.monsters;
+    opponentTowers = opponentData.towers;
+  })
 });
+
+ 
 
 const buyTowerButton = document.createElement("button");
 buyTowerButton.textContent = "타워 구입";
