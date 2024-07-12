@@ -239,9 +239,31 @@ function gameLoop() {
       }
     } else {
       // TODO. 몬스터 사망 이벤트 전송
+      serverSocket.emit('monsterDead', { monsterId: monster.id });
       monsters.splice(i, 1);
     }
   }
+
+  // 상대 몬스터 제거 함수
+  function removeOpponentMonster(monsterId) {
+    const monsterElement = document.getElementById(`opponent-monster-${monsterId}`);
+    if (monsterElement) {
+      monsterElement.parentNode.removeChild(monsterElement);
+    }
+  }
+  // 상대 몬스터 사망시 내 클라로 전송
+  Socket.on('monsterDead', (data) => {
+    const { monsterId } = data;
+
+    io.emit('opponentMonsterDead', { monsterId });
+  });
+
+  // 이벤트 수신해서 상대방 몬스터 사망처리
+  serverSocket.on('opponentMonsterDead', (data) => {
+    const { monsterId } = data;
+
+    removeOpponentMonster(monsterId);
+  });
 
   // 상대방 게임 화면 업데이트
   opponentCtx.drawImage(backgroundImage, 0, 0, opponentCanvas.width, opponentCanvas.height);
