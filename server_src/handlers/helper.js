@@ -1,6 +1,6 @@
 //import { getUsers, removeUser } from '../models/user.model.js';
 import { CLIENT_VERSION } from '../constants.js';
-import handlerMappings from './handlerMapping.js';
+import handlerMapping from '../handlers/handlerMapping.js';
 
 export const handleDisconnect = (socket, uuid) => {
   //removeUser(socket.id); // 사용자 삭제
@@ -22,7 +22,7 @@ export const handleEvent = async (io, socket, data) => {
     return;
   }
 
-  const handler = handlerMappings[data.handlerId];
+  const handler = handlerMapping[data.handlerId];
   if (!handler) {
     socket.emit('response', { status: 'fail', message: 'Handler not found' });
     return;

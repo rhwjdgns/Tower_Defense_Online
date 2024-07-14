@@ -20,6 +20,8 @@ enum PacketType {
     C2S_MONSTER_ATTACK_BASE = 15;
     S2C_UPDATE_BASE_HP = 16;
     S2C_GAMESYNC = 17;
+    C2S_REGISTER_REQUEST = 18;
+    S2C_REGISTER_RESPONSE = 19;
 }
 
 // 좌표
@@ -79,8 +81,8 @@ message C2S_TowerAttack {
 
 // 요청 패킷 (클라이언트 → 서버)
 message C2S_LoginRequest {
-    string id = 1;
-    string password = 2;
+    string userId = 1;
+    string userPw = 2;
 }
 
 // 몬스터 생성 좌표
@@ -170,6 +172,18 @@ message TowerInfo {
     uint32 y = 2;
 }
 
+// 회원가입 정보 (요청)
+message RegisterRequest{
+    string userId = 1;
+    string userPw = 2;
+}
+
+//회원가입 (응답)
+message RegisterResponse{
+    string userId = 1;
+    string userPw = 2;
+}
+
 // 게임 패킷 (헤더 + 페이로드)
 message GamePacket {
     PacketHeader header = 1;  // 패킷의 헤더
@@ -191,5 +205,8 @@ message GamePacket {
         C2S_MonsterAttackBase monster_attack_base = 16;
         S2C_UpdateBaseHp update_base_hp = 17;
         S2C_GameSync game_sync = 18;
+        C2S_RegisterRequest register_request = 19;
+        S2C_RegisterResponse register_response = 20;
+
         // 추가 패킷 타입들 여기에 추가하기
     }

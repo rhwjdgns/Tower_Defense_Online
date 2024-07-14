@@ -43,20 +43,51 @@
       <button id="register">회원가입</button>
       <button id="back" style="margin-top: 50px">뒤로가기</button>
     </div>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
     <script>
+
+      const socket = io("http://localhost:8080");
       document.getElementById("register").addEventListener("click", () => {
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
 
-        fetch("http://localhost:8080/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username, password }),
-        })
-          .then((response) => {
-            if (response.status === 201) {
+        const packet = {
+          packetType : 18,
+          username,
+          password
+        };
+
+        socket.emit('register',packet);
+
+      });
+
+      //   fetch("http://localhost:8080/api/sign-up", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({ username, password }),
+      //   })
+      //     .then((response) => {
+      //       if (response.status === 201) {
+      //         alert("회원가입 성공");
+      //         window.location.href = "index.html";
+      //       } else {
+      //         alert("회원가입 실패");
+      //       }
+      //     })
+      //     .catch((error) => {
+      //       console.error("Error:", error);
+      //     });
+      // });
+
+      document.getElementById("back").addEventListener("click", () => {
+        window.location.href = "index.html";
+
+        socket.on('register',(data)=>{
+          if (response.status === 201) {
               alert("회원가입 성공");
               window.location.href = "index.html";
             } else {
@@ -66,10 +97,6 @@
           .catch((error) => {
             console.error("Error:", error);
           });
-      });
-
-      document.getElementById("back").addEventListener("click", () => {
-        window.location.href = "index.html";
       });
     </script>
   </body>
