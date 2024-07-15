@@ -22,7 +22,7 @@ const loader = document.getElementsByClassName('loader')[0];
 const NUM_OF_MONSTERS = 5;
 // 게임 데이터
 let towerCost = 0;
-let monsterSpawnInterval = 0;
+let monsterSpawnInterval = 1000;
 // 유저 데이터
 let userGold = 0;
 let base;
@@ -192,11 +192,15 @@ function gameLoop() {
     const monster = monsters[i];
     if (monster.hp > 0) {
       const Attacked = monster.move();
+      monster.draw(ctx, false);
       if (Attacked) {
         const attackedSound = new Audio('sounds/attacked.wav');
         attackedSound.volume = 0.3;
         attackedSound.play();
         monsters.splice(i, 1);
+        baseHp -= monster.takeDamage();
+        base.takeDamage(monster.takeDamage());
+        // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
       monsters.splice(i, 1);
@@ -215,11 +219,19 @@ function gameLoop() {
   opponentBase.draw(opponentCtx, baseImage, true);
   requestAnimationFrame(gameLoop);
 }
-function initGame() {
+function initGame(payload) {
   if (isInitGame) {
     return;
   }
-  initialTowerCoords = [{}];
+  userGold = payload.userGold;
+  baseHp = payload.baseHp;
+  monsterPath = payload.monsterPath;
+  initialTowerCoords = payload.initialTowerCoords;
+  basePosition = payload.basePosition;
+  opponentMonsterPath = payload.opponentMonsterPath;
+  opponentInitialTowerCoords = payload.opponentInitialTowerCoords;
+  opponentBasePosition = payload.opponentBasePosition;
+
   bgm = new Audio('sounds/bgm.mp3');
   bgm.loop = true;
   bgm.volume = 0.2;
@@ -254,20 +266,7 @@ Promise.all([
     });
     console.log('client checking: ', userId);
   });
-  serverSocket.on('spawnMonster', (data) => {
-    const { userId, monsterLevel } = data;
-    io.to(someRoom).emit('monsterSpawned', {
-      monsterId: newMonster.id,
-      position: newMonster.poition,
-    });
-  });
-  serverSocket.on('monsterDied', (data) => {
-    io.to(someRoom).emit('gameSync', {
-      playerData: updatedPlayerData,
-      opponentData: updatedOpponentData,
-    });
-  });
-  serverSocket.on('event', (data) => {
+  serverSocket.on('event', (data, payload) => {
     console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
     if (data.packetType === 14) {
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
@@ -285,7 +284,7 @@ Promise.all([
           canvas.style.display = 'block';
           opponentCanvas.style.display = 'block';
           if (!isInitGame) {
-            initGame();
+            initGame(payload);
           }
         }
       }, 300);
@@ -337,7 +336,7 @@ buyTowerButton.addEventListener('click', placeNewTower);
 document.body.appendChild(buyTowerButton);
 function sendGameEnd() {
   const packet = {
-    packetType: 3,
+    packetType: 3, //PacketType.C2S_GAME_END_REQUEST,
     userId: localStorage.getItem('userId'),
     finalScore: score,
   };

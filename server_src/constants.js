@@ -1,4 +1,6 @@
 export const CLIENT_VERSION = ['1.0.0', '1.0.1', '1.1.0'];
+export const RESOLUTION_WIDTH = 1500;
+export const RESOLUTION_HEIGHT = 680;
 
 export const PacketType = {
   C2S_LOGIN_REQUEST: 1,
