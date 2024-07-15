@@ -18,7 +18,6 @@ const initSocket = (server) => {
     });
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.id}`);
-      // 대기열에서 사용자를 제거하는 로직 추가 필요
     });
   });
 };
