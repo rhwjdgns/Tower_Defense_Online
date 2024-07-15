@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="author" content="Changmin Kang" />
-    <title>내일배움캠프 Node.js 트랙 타워 디펜스 게임 온라인</title>
+    <title>회원가입</title>
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
     <style>
       body {
@@ -48,24 +48,19 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        fetch('http://localhost:8080/api/sign-up', {
+        fetch('/api/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            userId: username,
-            password: password,
-          }),
+          body: JSON.stringify({ username, password }),
         })
-          .then(async (response) => {
-            if (response.ok) {
-              const responseData = await response.json();
+          .then((response) => {
+            if (response.status === 201) {
               alert('회원가입 성공');
               window.location.href = 'index.html';
             } else {
-              const responseData = await response.json();
-              alert(responseData.errorMessage);
+              alert('회원가입 실패');
             }
           })
           .catch((error) => {

@@ -15,9 +15,8 @@ function sendGameOver(game, isWin) {
 
 // 게임 종료 요청 처리
 function handleGameEnd(socket, packet) {
-  // 게임 종료 로직
   const { userId, finalScore } = packet;
-  // TODO: 유저의 최종 점수를 데이터베이스에 저장하는 로직 추가
+  // 유저의 최종 점수를 데이터베이스에 저장하는 로직 추가
 
   socket.emit('gameEnd', { success: true });
 }

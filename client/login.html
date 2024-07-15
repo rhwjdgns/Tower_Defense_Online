@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="author" content="Changmin Kang" />
-    <title>내일배움캠프 Node.js 트랙 타워 디펜스 게임 온라인</title>
+    <title>로그인</title>
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
     <style>
       body {
@@ -48,20 +48,16 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        fetch('http://localhost:8080/api/sign-in', {
+        fetch('/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            userId: username,
-            password: password,
-          }),
+          body: JSON.stringify({ username, password }),
         })
-          .then(async (response) => response.json())
+          .then((response) => response.json())
           .then((data) => {
             if (data.token) {
-              // 토큰은 브라우저의 localStorage에 저장하고 있다가 필요할 때 사용합니다!
               localStorage.setItem('token', data.token);
               alert('로그인 성공');
               window.location.href = 'index.html';
