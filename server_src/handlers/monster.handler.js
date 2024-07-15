@@ -1,11 +1,11 @@
 const { sendGameSync } = require('./gameSyncHandler');
-const { PacketType } = require('../constants');
 const {
   createMonsters,
   getMonsters,
   setMonster,
   removeMonster,
 } = require('../models/monster.model.js');
+import { PacketType } from '../constants.js';
 
 // 아군 몬스터 사망
 function handleDieMonster(uuid, payload) {
