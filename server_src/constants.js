@@ -1,6 +1,6 @@
 export const CLIENT_VERSION = ['1.0.0', '1.0.1', '1.1.0'];
 
-const PacketType = {
+export const PacketType = {
   C2S_LOGIN_REQUEST: 1,
   S2C_LOGIN_RESPONSE: 2,
   C2S_GAME_END_REQUEST: 3,
@@ -21,4 +21,5 @@ const PacketType = {
   C2S_REGISTER_REQUEST: 18,
 };
 
-module.exports = { PacketType };
+
+// module.exports = { PacketType };

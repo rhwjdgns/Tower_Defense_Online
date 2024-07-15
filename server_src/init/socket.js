@@ -1,27 +1,24 @@
 import { Server as SocketIO } from 'socket.io';
-import { handleRegister, handleLogin } from '../handlers/registerHandler.js';
-
-const registerHandler = (io) => {
-  io.on('connection', (socket) => {
-    console.log(`New user connected: ${socket.id}`);
-
-    socket.on('register', async (data) => {
-      const response = await handleRegister(socket.id, data);
-      socket.emit('response', response);
-    });
-
-    socket.on('login', async (data) => {
-      const response = await handleLogin(socket.id, data);
-      socket.emit('response', response);
-    });
-
-    // 다른 이벤트 핸들러 여기에 추가해주세용 
-  });
-};
+import { handleMatchRequest } from '../handlers/matchMakingHandler.js';
 
 const initSocket = (server) => {
   const io = new SocketIO(server);
-  registerHandler(io);
+  io.on('connection', (socket) => {
+    console.log(`New user connected: ${socket.id}`);
+    socket.on('event', (packet) => {
+      console.log(`Received packet: ${JSON.stringify(packet)}`);
+      switch (packet.packetType) {
+        case 13: // C2S_MATCH_REQUEST
+          handleMatchRequest(socket, packet);
+          break;
+        // 다른 이벤트 핸들러 추가
+        default:
+          console.log(`Unknown packet type: ${packet.packetType}`);
+      }
+    });
+    socket.on('disconnect', () => {
+      console.log(`User disconnected: ${socket.id}`);
+    });
+  });
 };
-
 export default initSocket;
