@@ -306,6 +306,7 @@ Promise.all([
     console.log('client2 checking: ', userId);
   });
 
+    //대결 시작
   serverSocket.on('event', (data) => {
     if (data.packetType ===14){
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';

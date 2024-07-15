@@ -20,6 +20,9 @@ const server = createServer(app);
 const PORT = 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
+const activeSessions = {};
+
+
 // 특정 도메인만 허용하는 CORS 설정
 const corsOptions = {
   origin: '*', // 허용하고자 하는 도메인
@@ -96,9 +99,15 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid password' });
     }
 
+    if (activeSessions[user.userId]) {
+      return res.status(400).json({ message: 'User already logged in' });
+    }
+
     const token = jwt.sign({ id: user.userId }, JWT_SECRET, {
       expiresIn: '1h',
     });
+
+    activeSessions[user.userId] = token;
 
     res.status(200).json({ token });
   } catch (error) {

@@ -233,8 +233,12 @@ Promise.all([
     });
     console.log('client checking: ', userId);
   });
+
+  //대결 시작
   serverSocket.on('event', (data) => {
     console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
+
+
     if (data.packetType === 14) {
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
       let progressValue = 0;
