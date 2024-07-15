@@ -291,8 +291,13 @@ Promise.all([
     }
   });
 
-  serverSocket.on("connect", () => {
+  serverSocket.on('connect', () => {
     // TODO. 서버와 연결되면 대결 대기열 큐 진입
+    const packet = {
+      packetType: 13, //C2S_MATCH_REQUEST
+      userId: localStorage.getItem('userId') 
+    };
+    serverSocket.emit('matchRequest', packet);
   });
 
   serverSocket.on("matchFound", (data) => {

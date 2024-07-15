@@ -20,8 +20,33 @@ enum PacketType {
     C2S_MONSTER_ATTACK_BASE = 15;
     S2C_UPDATE_BASE_HP = 16;
     S2C_GAMESYNC = 17;
-    C2S_REGISTER_REQUEST = 18;
-    S2C_REGISTER_RESPONSE = 19;
+    C2S_REGISTER_REQUEST = 18; // 회원가입 요청
+    S2C_REGISTER_RESPONSE = 19; // 회원가입 응답
+}
+
+// 회원가입 요청 패킷
+message C2S_RegisterRequest {
+    string username = 1;
+    string password = 2;
+}
+
+// 회원가입 응답 패킷
+message S2C_RegisterResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// 로그인 요청 패킷
+message C2S_LoginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+// 로그인 응답 패킷
+message S2C_LoginResponse {
+    bool success = 1;
+    string message = 2;
+    string token = 3; // 성공 시 발급되는 JWT 토큰
 }
 
 // 좌표
@@ -79,12 +104,6 @@ message C2S_TowerAttack {
     uint32 monsterIndex = 2;
 }
 
-// 요청 패킷 (클라이언트 → 서버)
-message C2S_LoginRequest {
-    string userId = 1;
-    string userPw = 2;
-}
-
 // 몬스터 생성 좌표
 message MonsterSpawnPoint {
     uint32 x = 1;
@@ -117,14 +136,6 @@ message S2C_EnemyTowerAttack {
     uint32 enemyTowerIndex = 1;
     uint32 enemyMonsterIndex = 2;
     GlobalFailCode failCode = 3;
-}
-
-// 응답 패킷 (서버 → 클라이언트)
-message S2C_LoginResponse {
-    bool success = 1;
-    string message = 2;
-    string token = 3; // 성공 시 발급되는 JWT 토큰
-    GlobalFailCode fail_code = 4;
 }
 
 // 몬스터 생성 요청 패킷
@@ -172,18 +183,6 @@ message TowerInfo {
     uint32 y = 2;
 }
 
-// 회원가입 정보 (요청)
-message RegisterRequest{
-    string userId = 1;
-    string userPw = 2;
-}
-
-//회원가입 (응답)
-message RegisterResponse{
-    string userId = 1;
-    string userPw = 2;
-}
-
 // 게임 패킷 (헤더 + 페이로드)
 message GamePacket {
     PacketHeader header = 1;  // 패킷의 헤더
@@ -207,6 +206,5 @@ message GamePacket {
         S2C_GameSync game_sync = 18;
         C2S_RegisterRequest register_request = 19;
         S2C_RegisterResponse register_response = 20;
-
-        // 추가 패킷 타입들 여기에 추가하기
     }
+}

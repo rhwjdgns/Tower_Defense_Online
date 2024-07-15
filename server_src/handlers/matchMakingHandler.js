@@ -12,7 +12,7 @@ export const handleMatchRequest = async (socket, packet) => {
       // Get the user from the database
       const user = await getUser(userId);
       if (user) {
-        queue.push({ id: user.id, socket }); // Add user to the queue
+        queue.push({ id: user.userId, socket }); // Add user to the queue
         socket.emit('matchRequest', { 
             success: true, 
             message: 'Successfully joined the match queue.' });
@@ -30,6 +30,8 @@ export const handleMatchRequest = async (socket, packet) => {
         message: 'Error adding user to queue.' });
     }
   };
+
+  console.log(getUser);
   
   // Matching players in the queue
   function tryMatch() {

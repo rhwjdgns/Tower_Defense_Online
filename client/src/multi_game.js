@@ -262,7 +262,7 @@ Promise.all([
   new Promise((resolve) => (pathImage.onload = resolve)),
   ...monsterImages.map((img) => new Promise((resolve) => (img.onload = resolve))),
 ]).then(() => {
-  serverSocket = io('localhost:8080', {
+  serverSocket = io("http://localhost:8080", {
     auth: {
       token: localStorage.getItem('token'),
     },
@@ -303,7 +303,7 @@ Promise.all([
         canvas.style.display = 'block';
         opponentCanvas.style.display = 'block';
 
-        // TODO. 유저 및 상대방 유저 데이터 초기화
+        // 유저 및 상대방 유저 데이터 초기화
         if (!isInitGame) {
           initGame();
         }
@@ -366,9 +366,9 @@ document.body.appendChild(buyTowerButton);
 // 게임 종료 패킷 전송
 function sendGameEnd() {
   const packet = {
-    packetType: 3, // C2S_GAME_END_REQUEST
-    userId: localStorage.getItem('userId'), // JWT 토큰을 사용할 경우 ID는 서버에서 해석함
-    finalScore: score,
+    packetType: PacketType.C2S_GAME_END_REQUEST,
+    userId: localStorage.getItem('userId'),
+    finalScore: score
   };
 
   serverSocket.emit('gameEnd', packet);
