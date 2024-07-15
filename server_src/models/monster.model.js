@@ -29,3 +29,5 @@ export const removeMonster = (uuid, monsterId) => {
   monsters[uuid].splice(index, 1);
   return { status: 'success', message: 'Monster removed' };
 };
+
+// 좌표 추가하기

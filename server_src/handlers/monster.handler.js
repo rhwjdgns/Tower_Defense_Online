@@ -77,9 +77,4 @@ function handleEnemySpawnMonster(uuid, payload) {
   return { status: 'success', message: 'Monster created' };
 }
 
-module.exports = {
-  handleDieMonster,
-  handleEnemyDieMonster,
-  handleSpawnMonster,
-  handleEnemySpawnMonster,
-};
+export { handleDieMonster, handleEnemyDieMonster, handleSpawnMonster, handleEnemySpawnMonster };

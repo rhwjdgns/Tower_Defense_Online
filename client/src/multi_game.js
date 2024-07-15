@@ -58,6 +58,13 @@ for (let i = 1; i <= NUM_OF_MONSTERS; i++) {
   img.src = `images/monster${i}.png`;
   monsterImages.push(img);
 }
+monsterPath = monsterPath || [];
+initialTowerCoords = initialTowerCoords || [];
+basePosition = basePosition || { x: 0, y: 0 };
+
+opponentMonsterPath = opponentMonsterPath || [];
+opponentInitialTowerCoords = opponentInitialTowerCoords || [];
+opponentBasePosition = opponentBasePosition || { x: 0, y: 0 };
 let bgm;
 function initMap() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
@@ -69,6 +76,10 @@ function initMap() {
   placeBase(opponentBasePosition, false);
 }
 function drawPath(path, context) {
+  if (!path || path.length === 0) {
+    console.error('Path is not defined or empty');
+    return;
+  }
   const segmentLength = 10;
   const imageWidth = 30;
   const imageHeight = 30;
@@ -96,12 +107,12 @@ function drawRotatedImage(image, x, y, width, height, angle, context) {
   context.drawImage(image, -width / 2, -height / 2, width, height);
   context.restore();
 }
-function getRandomPositionNearPath(maxDistance) {
-  const segmentIndex = Math.floor(Math.random() * (monsterPath.length - 1));
-  const startX = monsterPath[segmentIndex].x;
-  const startY = monsterPath[segmentIndex].y;
-  const endX = monsterPath[segmentIndex + 1].x;
-  const endY = monsterPath[segmentIndex + 1].y;
+function getRandomPositionNearPath(path, maxDistance) {
+  const segmentIndex = Math.floor(Math.random() * (path.length - 1));
+  const startX = path[segmentIndex].x;
+  const startY = path[segmentIndex].y;
+  const endX = path[segmentIndex + 1].x;
+  const endY = path[segmentIndex + 1].y;
   const t = Math.random();
   const posX = startX + t * (endX - startX);
   const posY = startY + t * (endY - startY);
@@ -138,9 +149,18 @@ function placeBase(position, isPlayer) {
     opponentBase.draw(opponentCtx, baseImage, true);
   }
 }
+function sendMonsterSpawn() {
+  const packet = {
+    packetType: 9,
+    userId: localStorage.getItem('userId'),
+    monsterLevel: monsterLevel,
+  };
+  serverSocket.emit('spawnMonster', packet);
+}
 function spawnMonster() {
   const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(newMonster);
+  sendMonsterSpawn();
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 function gameLoop() {
@@ -199,6 +219,7 @@ function initGame() {
   if (isInitGame) {
     return;
   }
+  initialTowerCoords = [{}];
   bgm = new Audio('sounds/bgm.mp3');
   bgm.loop = true;
   bgm.volume = 0.2;
@@ -232,6 +253,19 @@ Promise.all([
       userId: localStorage.getItem('userId'),
     });
     console.log('client checking: ', userId);
+  });
+  serverSocket.on('spawnMonster', (data) => {
+    const { userId, monsterLevel } = data;
+    io.to(someRoom).emit('monsterSpawned', {
+      monsterId: newMonster.id,
+      position: newMonster.poition,
+    });
+  });
+  serverSocket.on('monsterDied', (data) => {
+    io.to(someRoom).emit('gameSync', {
+      playerData: updatedPlayerData,
+      opponentData: updatedOpponentData,
+    });
   });
   serverSocket.on('event', (data) => {
     console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
@@ -281,11 +315,13 @@ Promise.all([
     userGold = playerData.userGold;
     base.hp = playerData.baseHp;
     score = playerData.score;
-    monsters = playerData.monsters;
-    towers = playerData.towers;
+    monsters = playerData.monsters.map((m) => new Monster(m.path, monsterImages, m.level));
+    towers = playerData.towers.map((t) => new Tower(t.x, t.y));
     opponentBase.hp = opponentData.baseHp;
-    opponentMonsters = opponentData.monsters;
-    opponentTowers = opponentData.towers;
+    opponentMonsters = opponentData.monsters.map(
+      (m) => new Monster(m.path, monsterImages, m.level),
+    );
+    opponentTowers = opponentData.towers.map((t) => new Tower(t.x, t.y));
   });
 });
 const buyTowerButton = document.createElement('button');
@@ -301,7 +337,7 @@ buyTowerButton.addEventListener('click', placeNewTower);
 document.body.appendChild(buyTowerButton);
 function sendGameEnd() {
   const packet = {
-    packetType: PacketType.C2S_GAME_END_REQUEST,
+    packetType: 3,
     userId: localStorage.getItem('userId'),
     finalScore: score,
   };

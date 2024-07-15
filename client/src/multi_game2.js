@@ -1,7 +1,6 @@
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
-
 if (!localStorage.getItem('token2')) {
   alert('로그인이 필요합니다.');
   location.href = '/login';
@@ -28,7 +27,7 @@ const loader = document.getElementsByClassName('loader')[0];
 const NUM_OF_MONSTERS = 5; // 몬스터 개수
 // 게임 데이터
 let towerCost = 0; // 타워 구입 비용
-let monsterSpawnInterval = 1; // 몬스터 생성 주기
+let monsterSpawnInterval = 0; // 몬스터 생성 주기
 
 // 유저 데이터
 let userGold = 0; // 유저 골드
@@ -72,7 +71,13 @@ for (let i = 1; i <= NUM_OF_MONSTERS; i++) {
   img.src = `images/monster${i}.png`;
   monsterImages.push(img);
 }
+monsterPath = monsterPath || [];
+initialTowerCoords = initialTowerCoords || [];
+basePosition = basePosition || { x: 0, y: 0 };
 
+opponentMonsterPath = opponentMonsterPath || [];
+opponentInitialTowerCoords = opponentInitialTowerCoords || [];
+opponentBasePosition = opponentBasePosition || { x: 0, y: 0 };
 let bgm;
 
 function initMap() {
@@ -86,6 +91,10 @@ function initMap() {
 }
 
 function drawPath(path, context) {
+  if (!path || path.length === 0) {
+    console.error('Path is not defined or empty');
+    return;
+  }
   const segmentLength = 10; // 몬스터 경로 세그먼트 길이
   const imageWidth = 30; // 몬스터 경로 이미지 너비
   const imageHeight = 30; // 몬스터 경로 이미지 높이
@@ -118,20 +127,17 @@ function drawRotatedImage(image, x, y, width, height, angle, context) {
   context.restore();
 }
 
-function getRandomPositionNearPath(maxDistance) {
-  const segmentIndex = Math.floor(Math.random() * (monsterPath.length - 1));
-  const startX = monsterPath[segmentIndex].x;
-  const startY = monsterPath[segmentIndex].y;
-  const endX = monsterPath[segmentIndex + 1].x;
-  const endY = monsterPath[segmentIndex + 1].y;
-
+function getRandomPositionNearPath(path, maxDistance) {
+  const segmentIndex = Math.floor(Math.random() * (path.length - 1));
+  const startX = path[segmentIndex].x;
+  const startY = path[segmentIndex].y;
+  const endX = path[segmentIndex + 1].x;
+  const endY = path[segmentIndex + 1].y;
   const t = Math.random();
   const posX = startX + t * (endX - startX);
   const posY = startY + t * (endY - startY);
-
   const offsetX = (Math.random() - 0.5) * 2 * maxDistance;
   const offsetY = (Math.random() - 0.5) * 2 * maxDistance;
-
   return {
     x: posX + offsetX,
     y: posY + offsetY,
@@ -168,11 +174,18 @@ function placeBase(position, isPlayer) {
     opponentBase.draw(opponentCtx, baseImage, true);
   }
 }
-
+function sendMonsterSpawn() {
+  const packet = {
+    packetType: 9,
+    userId: localStorage.getItem('userId2'),
+    monsterLevel: monsterLevel,
+  };
+  serverSocket.emit('spawnMonster', packet);
+}
 function spawnMonster() {
   const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(newMonster);
-
+  sendMonsterSpawn();
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 
@@ -340,18 +353,16 @@ Promise.all([
   // 상태 동기화 이벤트 수신
   serverSocket.on('gameSync', (data) => {
     const { playerData, opponentData } = data;
-
-    // 유저 데이터 동기화
     userGold = playerData.userGold;
     base.hp = playerData.baseHp;
     score = playerData.score;
-    monsters = playerData.monsters;
-    towers = playerData.towers;
-
-    // 상대방 데이터 동기화
+    monsters = playerData.monsters.map((m) => new Monster(m.path, monsterImages, m.level));
+    towers = playerData.towers.map((t) => new Tower(t.x, t.y));
     opponentBase.hp = opponentData.baseHp;
-    opponentMonsters = opponentData.monsters;
-    opponentTowers = opponentData.towers;
+    opponentMonsters = opponentData.monsters.map(
+      (m) => new Monster(m.path, monsterImages, m.level),
+    );
+    opponentTowers = opponentData.towers.map((t) => new Tower(t.x, t.y));
   });
 });
 
