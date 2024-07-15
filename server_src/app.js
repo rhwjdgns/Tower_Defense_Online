@@ -9,6 +9,7 @@ import { prisma } from './utils/prisma/index.js';
 import initSocket from './init/socket.js';
 import cors from 'cors';
 
+
 // __dirname을 ES 모듈에서 사용하기 위한 설정
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

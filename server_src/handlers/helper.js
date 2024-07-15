@@ -1,5 +1,5 @@
-import { CLIENT_VERSION } from '../constants';
-import handlerMappings from './handlerMapping';
+import { CLIENT_VERSION } from '../constants.js';
+import handlerMappings from './handlerMapping.js';
 import { addUser } from '../models/user.model.js';
 
 

@@ -7,6 +7,13 @@ if (!localStorage.getItem("token2")) {
   location.href = "/login";
 }
 
+const userId = localStorage.getItem('userId2');
+if (!userId){
+  alert('ㅎㅎㅎㅎㅎㅎㅎ 필요합니다.');
+ location.href = '/login';
+}
+
+
 let serverSocket;
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -292,17 +299,17 @@ Promise.all([
   });
 
   serverSocket.on('connect', () => {
-    // TODO. 서버와 연결되면 대결 대기열 큐 진입
-    const packet = {
-      packetType: 13, //C2S_MATCH_REQUEST
-      userId: localStorage.getItem('userId') 
-    };
-    serverSocket.emit('matchRequest', packet);
+    serverSocket.emit('event',{
+        packetType: 13, //C2S_MATCH_REQUEST
+        userId: localStorage.getItem('userId2')
+    });   
+    console.log('client2 checking: ', userId);
   });
 
-  serverSocket.on("matchFound", (data) => {
-    // 상대가 매치되면 3초 뒤 게임 시작
-    progressBarMessage.textContent = "게임이 3초 뒤에 시작됩니다.";
+  serverSocket.on('event', (data) => {
+    if (data.packetType ===14){
+      progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
+    }
 
     let progressValue = 0;
     const progressInterval = setInterval(() => {
@@ -383,7 +390,7 @@ document.body.appendChild(buyTowerButton);
 function sendGameEnd() {
   const packet = {
     packetType: 3, // C2S_GAME_END_REQUEST
-    userId: localStorage.getItem('userId'), // JWT 토큰을 사용할 경우 ID는 서버에서 해석함
+    userId: localStorage.getItem('userId2'), // JWT 토큰을 사용할 경우 ID는 서버에서 해석함
     finalScore: score
   };
 

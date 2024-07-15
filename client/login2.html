@@ -46,20 +46,21 @@
     <script>
       document.getElementById("login").addEventListener("click", () => {
         const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
+      const password = document.getElementById("password").value;
 
-        fetch("http://localhost:8080/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username, password }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.token) {
-              // 토큰은 브라우저의 localStorage에 저장하고 있다가 필요할 때 사용합니다!
-              localStorage.setItem("token2", data.token);
+      fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.token) {
+          localStorage.setItem("token2", data.token);
+          localStorage.setItem("userId2", username);
+
               alert("로그인 성공");
               window.location.href = "index.html";
             } else {
