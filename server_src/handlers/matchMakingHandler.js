@@ -30,8 +30,6 @@ export const handleMatchRequest = async (socket, packet) => {
         message: 'Error adding user to queue.' });
     }
   };
-
-  console.log(getUser);
   
   // Matching players in the queue
   function tryMatch() {

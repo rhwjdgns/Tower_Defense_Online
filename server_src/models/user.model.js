@@ -4,11 +4,7 @@ const users =[];
 
 // Add a user to the database when click "start game"
 export const addUser = (user) => {
-  const data = {
-    uuid: user.uuid,
-    socketId: user.socketId,
-  };
-  users.push(data);
+  users.push(user);
 };
 
 // Remove a user from the database
