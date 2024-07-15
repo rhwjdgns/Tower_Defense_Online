@@ -1,75 +1,76 @@
-import express from 'express';
-import { prisma } from '../utils/prisma/index.js';
-import bcrypt, { compareSync } from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+// import express from 'express';
+// import jwt from 'jsonwebtoken';
+// import bcrypt from 'bcrypt';
+// import { prisma } from '../utils/prisma/index.js';
 
-dotenv.config();
+// const router = express.Router();
 
-const router = express.Router();
+// //* 회원가입 API *//
+// router.post('/sign-up', async (req, res, next) => {
+//   const { userId, userPw } = req.body;
 
-/** 사용자 회원가입 API **/
-router.post('/sign-up', async (req, res, next) => {
-  try {
-    const { userId, password } = req.body;
-    const isExistUser = await prisma.user.findFirst({
-      where: {
-        userId: userId,
-      },
-    });
-    console.log(isExistUser);
-    if (isExistUser) {
-      return res.status(409).json({ errorMessage: '이미 존재하는 사용자입니다.' });
-    }
+//   try {
+//     if (!id || !userPw) {
+//       return res.status(400).json({ message: '아이디와 비밀번호를 올바르게 입력해주세요' });
+//     }
 
-    const vaildId = /^[a-z0-9]+$/;
-    if (!vaildId.test(userId)) {
-      return res.status(400).json({ errorMessage: '아이디는 소문자와 숫자만 사용할 수 있습니다.' });
-    }
+//     // 아이디와 비밀번호 조건
+//     if (userId.length <= 3 || userPw.length <= 3) {
+//       return res.status(400).json({ message: '아이디와 비밀번호는 3자 이상으로 만들어주세요.' });
+//     }
+//     if (userId.length >= 10 || userPw.length >= 10) {
+//       return res.status(400).json({ message: '아이디와 비밀번호는 10자 이하로 만들어주세요.' });
+//     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ errorMessage: '비밀번호는 최소 6자 이상이어야 합니다.' });
-    }
+//     // userId가 이미 존재하는지 확인
+//     const existingUser = await prisma.user.findUnique({ where: { userId } });
 
-    // 사용자 비밀번호를 암호화합니다.
-    const hashedPassword = await bcrypt.hash(password, 10);
+//     if (existingUser) {
+//       return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
+//     }
 
-    // Users 테이블에 사용자를 추가합니다.
-    const user = await prisma.user.create({
-      data: {
-        userId: userId,
-        userPw: hashedPassword,
-      },
-    });
-    console.log('생성완료', user);
-  } catch (e) {
-    console.log(e);
-  }
+//     // 비밀번호 해시
+//     const hashedPassword = await bcrypt.hash(userPw, 10);
 
-  return res.status(200).json({ message: '회원가입이 완료되었습니다.' });
-});
+//     // 사용자 생성
+//     const newUser = await prisma.user.create({
+//       data: {
+//         userId,
+//         userPw: hashedPassword,
+//       },
+//     });
 
-/** 로그인 API **/
-router.post('/sign-in', async (req, res, next) => {
-  try {
-    const { userId, password } = req.body;
-    const user = await prisma.user.findFirst({ where: { userId } });
+//     // 회원가입 성공 메시지 반환
+//     res.status(201).json({ message: '회원가입 성공' });
+//   } catch (error) {
+//     console.error('회원가입 에러:', error);
+//     res.status(500).json({ message: '서버 오류' });
+//   }
+// });
 
-    if (!user) return res.status(401).json({ message: '존재하지 않는 아이디입니다.' });
-    // 입력받은 사용자의 비밀번호와 데이터베이스에 저장된 비밀번호를 비교합니다.
-    if (!(await bcrypt.compare(password, user.userPw)))
-      return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
-    // 로그인에 성공하면, 사용자의 userId를 바탕으로 토큰을 생성합니다.
-    const token = jwt.sign(
-      {
-        userId: user.userId,
-      },
-      process.env.SECRET_KEY,
-    );
-    return res.status(200).json({ message: '로그인 성공', token: token });
-  } catch (e) {
-    console.log(e);
-  }
-});
+// //* 로그인 API *//
+// router.post('/login', async (req, res, next) => {
+//     const { userId, password } = req.body;
 
-export default router;
+//     try {
+//       const user = await prisma.user.findUnique({ where: { userId } });
+
+//       if (!user){
+//         return res.status(401).json({message:"존재하지 않는 아이디입니다."});
+//       }
+
+//       if (!bcrypt.compare(password, user.userPw)) {
+//         return res.status(401).json({ message: '비밀번호가 잘못되었습니다.' });
+//       }
+
+//       const token = jwt.sign({ userId: user.userId }, process.env.TOKEN_SECRET_KEY,
+//         {expiresIn: '1h'}
+//         );
+//       res.header("authorization",`Bearer ${token}`)
+//       res.status(201).json({ token: token ,userId: user.userId});
+//     } catch (error) {
+//       res.status(500).json({ message: '서버 오류' });
+//     }
+//   });
+
+//   export default router;

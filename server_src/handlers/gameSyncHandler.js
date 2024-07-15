@@ -1,4 +1,4 @@
-const { PacketType } = require('../constants');
+import { PacketType } from '../constants.js';
 
 // 상태 동기화 패킷 생성 및 전송
 function sendGameSync(game) {
@@ -38,4 +38,4 @@ function sendGameSync(game) {
   game.player2.socket.emit('gameSync', packet);
 }
 
-module.exports = { sendGameSync };
+export { sendGameSync };

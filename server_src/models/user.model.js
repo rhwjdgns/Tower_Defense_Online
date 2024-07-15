@@ -1,20 +1,20 @@
 import { prisma } from '../utils/prisma/index.js';
-import { authMiddleware } from '../middlewares/auth.middleware.js';
 
 const users = [];
 
-// 서버 메모리에 유저의 세션(소켓ID)을 저장
-// 이때 유저는 객체 형태로 저장
-// { uuid: string; socketId: string; };
+// Add a user to the database when click "start game"
 export const addUser = (user) => {
-  const data = {
-    uuid: user.uuid,
-    socketId: user.socketId,
-  };
-  users.push(data);
+  users.push(user);
 };
 
-// 발급받은 uuid를 해당 유저 db 에 저장
+// Remove a user from the database
+export const removeUser = (uuid) => {
+  const index = users.findIndex((user) => user.uuid === uuid);
+  if (index !== -1) {
+    return users.splice(index, 1)[0];
+  }
+};
+
 export const updateUser = async (user) => {
   const userData = await authMiddleware(user.token);
   const { userId } = userData;
@@ -26,15 +26,22 @@ export const updateUser = async (user) => {
   });
 };
 
-// 배열에서 유저 삭제
-export const removeUser = (socketId) => {
-  const index = users.findIndex((user) => user.socketId === socketId);
-  if (index !== -1) {
-    return users.splice(index, 1)[0];
+// Get a user from the database by ID
+export const getUser = async (userId) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        userId: userId,
+      },
+    });
+    return user;
+  } catch (error) {
+    console.error('Error getting user:', error);
+    throw error;
   }
 };
 
-// 전체 유저 조회
+// Get all users from the database
 export const getUsers = () => {
   return users;
 };

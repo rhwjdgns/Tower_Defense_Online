@@ -1,5 +1,6 @@
-const { sendGameSync } = require('./gameSyncHandler');
-const { PacketType } = require('../constants');
+
+import { sendGameSync } from './gameSyncHandler.js';
+import { PacketType } from '../constants.js';
 
 // 게임 오버 패킷 생성 및 전송
 function sendGameOver(game, isWin) {
@@ -24,10 +25,11 @@ function handleGameEnd(socket, packet) {
 function someGameFunction(game) {
   // 게임 로직...
 
-  // 상태 동기화 호출
-  sendGameSync(game);
-
-  // 게임 오버 로직 예시
+  }
+   // 상태 동기화 호출
+  function handleGameSync(socket,data){
+     sendGameSync(game);
+       // 게임 오버 로직 예시
   if (game.player1.baseHp <= 0) {
     sendGameOver(game, false); // player1 패배
   } else if (game.player2.baseHp <= 0) {
@@ -35,4 +37,7 @@ function someGameFunction(game) {
   }
 }
 
-module.exports = { someGameFunction, handleGameEnd };
+
+
+
+export { someGameFunction, handleGameEnd, handleGameSync, sendGameOver };

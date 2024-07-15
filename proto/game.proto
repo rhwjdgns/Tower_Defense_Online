@@ -85,7 +85,7 @@ message S2C_UpdateBaseHp {
 
 // 요청 패킷: 대결 신청 (클라이언트 → 서버)
 message C2S_MatchRequest {
-    string userId = 1;  // 유저 아이디
+    string user = 1;  // 유저 아이디
 }
 
 // 통지 패킷: 대결 시작 (서버 → 클라이언트)
