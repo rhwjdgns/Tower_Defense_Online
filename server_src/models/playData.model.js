@@ -29,7 +29,9 @@ export class GameData {
     opponentMonsterPath,
     opponentInitialTowerCoords,
     opponentBasePosition,
+    opponentUserInfo
   ) {
+    this.score = 0;
     this.userGold = 100;
     this.baseHp = 100;
     this.monsterPath = monsterPath;
@@ -38,6 +40,11 @@ export class GameData {
     this.opponentMonsterPath = opponentMonsterPath;
     this.opponentInitialTowerCoords = opponentInitialTowerCoords;
     this.opponentBasePosition = opponentBasePosition;
+    this.opponentUserInfo = opponentUserInfo;
+  }
+
+  getOpponentInfo() {
+    return this.opponentUserInfo;
   }
 
   setBaseHp(value) {

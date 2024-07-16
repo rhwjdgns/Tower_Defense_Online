@@ -49,12 +49,6 @@ message S2C_LoginResponse {
     string token = 3; // 성공 시 발급되는 JWT 토큰
 }
 
-// 좌표
-message Coordinates {
-    uint32 x = 1;
-    uint32 y = 2;
-}
-
 // 실패 코드 열거형
 enum GlobalFailCode {
     NONE = 0;
@@ -96,7 +90,8 @@ message S2C_MatchFoundNotification {
 
 // 요청 패킷 (클라이언트 → 서버)
 message C2S_TowerBuy {
-    Coordinates position = 1;
+    uint32 x = 1;
+    uint32 y = 2;
 }
 
 message C2S_TowerAttack {
