@@ -232,8 +232,9 @@ function gameLoop() {
         attackedSound.play();
         // TODO. 몬스터가 기지를 공격했을 때 서버로 이벤트 전송
         monsters.splice(i, 1);
-        baseHp -= monster.takeDamage();
-        base.takeDamage(monster.takeDamage());
+        
+        baseHp -= monster.Damage(); 
+        base.takeDamage(monster.Damage());
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {

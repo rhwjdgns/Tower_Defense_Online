@@ -9,9 +9,13 @@ export const getPlayData = (uuid) => {
   return playData[uuid];
 };
 
-export const setPlayData = (uuid, data) => {
-  return (playData[uuid] = data);
+export const setBaseHp = (uuid, data) => {
+  return (playData[uuid].setBaseHp(data.damage));
 };
+
+export const setGold = (uuid, data) => {
+  return (playData[uuid].setGold(data.gold));
+}
 
 export const clearPlayData = (uuid) => {
   delete playData[uuid];
@@ -34,5 +38,13 @@ export class GameData {
     this.opponentMonsterPath = opponentMonsterPath;
     this.opponentInitialTowerCoords = opponentInitialTowerCoords;
     this.opponentBasePosition = opponentBasePosition;
+  }
+
+  setBaseHp(value) {
+    this.baseHp -= value;
+  }
+
+  setGold(value) {
+    this.userGold += value;
   }
 }

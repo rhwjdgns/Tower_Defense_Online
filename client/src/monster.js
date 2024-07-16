@@ -48,7 +48,7 @@ export class Monster {
     }
   }
 
-  takeDamage() {
+  Damage() {
     return this.attackPower;
   }
 
