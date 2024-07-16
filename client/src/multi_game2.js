@@ -29,7 +29,7 @@ const loader = document.getElementsByClassName("loader")[0];
 const NUM_OF_MONSTERS = 5; // 몬스터 개수
 // 게임 데이터
 let towerCost = 0; // 타워 구입 비용
-let monsterSpawnInterval = 0; // 몬스터 생성 주기
+let monsterSpawnInterval = 1000; // 몬스터 생성 주기
 
 // 유저 데이터
 let userGold = 0; // 유저 골드
@@ -221,12 +221,17 @@ function gameLoop() {
     const monster = monsters[i];
     if (monster.hp > 0) {
       const Attacked = monster.move();
+      monster.draw(ctx, false);
       if (Attacked) {
         const attackedSound = new Audio("sounds/attacked.wav");
         attackedSound.volume = 0.3;
         attackedSound.play();
         // TODO. 몬스터가 기지를 공격했을 때 서버로 이벤트 전송
         monsters.splice(i, 1);
+        
+        baseHp -= monster.Damage(); 
+        base.takeDamage(monster.Damage());
+        // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
       // TODO. 몬스터 사망 이벤트 전송
@@ -259,10 +264,20 @@ function gameLoop() {
   requestAnimationFrame(gameLoop); // 지속적으로 다음 프레임에 gameLoop 함수 호출할 수 있도록 함
 }
 
-function initGame() {
+function initGame(payload) {
   if (isInitGame) {
     return;
   }
+  console.log(payload);
+  userGold = payload.userGold;
+  baseHp = payload.baseHp;
+  monsterPath = payload.monsterPath;
+  initialTowerCoords = payload.initialTowerCoords;
+  basePosition = payload.basePosition;
+  opponentMonsterPath = payload.opponentMonsterPath;
+  opponentInitialTowerCoords = payload.opponentInitialTowerCoords;
+  opponentBasePosition = payload.opponentBasePosition;
+
   bgm = new Audio("sounds/bgm.mp3");
   bgm.loop = true;
   bgm.volume = 0.2;
@@ -306,7 +321,7 @@ Promise.all([
     console.log('client2 checking: ', userId);
   });
 
-  serverSocket.on('event', (data) => {
+  serverSocket.on('event', (data, payload) => {
     if (data.packetType ===14){
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
     }
@@ -328,7 +343,7 @@ Promise.all([
 
         // TODO. 유저 및 상대방 유저 데이터 초기화
         if (!isInitGame) {
-          initGame();
+          initGame(payload);
         }
       }
     }, 300);
