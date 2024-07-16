@@ -30,6 +30,7 @@ export class GameData {
     opponentInitialTowerCoords,
     opponentBasePosition,
   ) {
+    this.score = 0;
     this.userGold = 100;
     this.baseHp = 100;
     this.monsterPath = monsterPath;

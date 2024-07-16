@@ -1,4 +1,3 @@
-import { PacketType } from '../constants.js';
 import { getTowers, removeTower, setTower } from '../models/tower.model.js';
 
 // 클라이언트 타워 vs 서버 타워 비교 함수
@@ -29,24 +28,27 @@ function compareTowers(currentTowers, gameTowers) {
 //서버에 타워를 추가한다
 export const towerAddOnHandler = (userId, payload) => {
   // 유저의 현재 타워 정보
-  const currentTowers = getTowers(userId);
+  let currentTowers = getTowers(userId);
 
   // 클라이언트의 타워 정보
-  const gameTowers = payload.gameTowers;
+  //const gameTowers = payload.gameTowers;
 
   // 클라이언트 타워 vs 서버 타워 비교
-  const hasDifference = compareTowers(currentTowers, gameTowers);
-  if (hasDifference) {
-    return {
-      status: 'fail',
-      message: 'There are differences between the client and server tower information',
-    };
-  }
+  // const hasDifference = compareTowers(currentTowers, gameTowers);
+  // if (hasDifference) {
+  //   return {
+  //     status: 'fail',
+  //     message: 'There are differences between the client and server tower information',
+  //   };
+  // }
 
-  setTower(userId, payload.X, payload.Y, payload.level);
+  setTower(userId, payload.x, payload.y, payload.level);
+
+  currentTowers = getTowers(userId);
+  console.log('현재 타워 : ' + currentTowers);
   return {
     status: 'success',
-    message: `Tower Update: ${payload.X}, ${payload.Y}`,
+    message: `Tower Update: ${payload.x}, ${payload.y}`,
   };
 };
 

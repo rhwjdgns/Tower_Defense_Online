@@ -1,5 +1,6 @@
 import { Server as SocketIO } from 'socket.io';
 import { handleMatchRequest } from '../handlers/matchMakingHandler.js';
+import { towerAddOnHandler } from '../handlers/tower.handler.js';
 
 const initSocket = (server) => {
   const io = new SocketIO(server);
@@ -10,6 +11,9 @@ const initSocket = (server) => {
       switch (packet.packetType) {
         case 13: // C2S_MATCH_REQUEST
           handleMatchRequest(socket, packet);
+          break;
+        case 5:
+          towerAddOnHandler(packet.userId, packet.payload);
           break;
         // 다른 이벤트 핸들러 추가
         default:

@@ -1,5 +1,6 @@
 import { PacketType, RESOLUTION_HEIGHT, RESOLUTION_WIDTH } from '../constants.js';
 import { createPlayData, GameData, getPlayData } from '../models/playData.model.js';
+import { createTowers, getTowers, setTower } from '../models/tower.model.js';
 let queue = [];
 function generateRandomMonsterPath() {
   const canvasHeight = RESOLUTION_HEIGHT;
@@ -60,6 +61,9 @@ function handleMatchRequest(socket, data) {
       packetType: PacketType.S2C_MATCH_FOUND_NOTIFICATION,
       opponentId: player2.userId,
     };
+    //타워 생성
+    createTowers(player1.userId);
+    createTowers(player2.userId);
 
     const player1MonsterPath = generateRandomMonsterPath();
     const player2MonsterPath = generateRandomMonsterPath();
@@ -67,8 +71,14 @@ function handleMatchRequest(socket, data) {
     let player2InitialTowerCoords = [];
 
     for (let i = 0; i < 5; i++) {
-      player1InitialTowerCoords.push(getRandomPositionNearPath(200, player1MonsterPath));
-      player2InitialTowerCoords.push(getRandomPositionNearPath(200, player2MonsterPath));
+      const towerCoords1 = getRandomPositionNearPath(200, player1MonsterPath);
+      const towerCoords2 = getRandomPositionNearPath(200, player2MonsterPath);
+
+      player1InitialTowerCoords.push(towerCoords1);
+      player2InitialTowerCoords.push(towerCoords2);
+
+      setTower(player1.userId, towerCoords1.x, towerCoords1.y, 1);
+      setTower(player2.userId, towerCoords2.x, towerCoords2.y, 1);
     }
 
     createPlayData(
