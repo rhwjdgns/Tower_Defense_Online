@@ -25,6 +25,7 @@ const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
 
 const NUM_OF_MONSTERS = 5; // 몬스터 개수
+const CLIENT_VERSION = '1.0.0';
 // 게임 데이터
 let towerCost = 0; // 타워 구입 비용
 let monsterSpawnInterval = 1000; // 몬스터 생성 주기
@@ -174,18 +175,10 @@ function placeBase(position, isPlayer) {
     opponentBase.draw(opponentCtx, baseImage, true);
   }
 }
-function sendMonsterSpawn() {
-  const packet = {
-    packetType: 9,
-    userId: localStorage.getItem('userId2'),
-    monsterLevel: monsterLevel,
-  };
-  serverSocket.emit('spawnMonster', packet);
-}
 function spawnMonster() {
   const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(newMonster);
-  sendMonsterSpawn();
+  sendEvent(9);
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 
@@ -232,12 +225,13 @@ function gameLoop() {
         attackedSound.play();
         // TODO. 몬스터가 기지를 공격했을 때 서버로 이벤트 전송
         monsters.splice(i, 1);
-        
-        baseHp -= monster.Damage(); 
+
+        baseHp -= monster.Damage();
         base.takeDamage(monster.Damage());
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
+      sendEvent(10);
       // TODO. 몬스터 사망 이벤트 전송
       monsters.splice(i, 1);
     }
@@ -395,13 +389,11 @@ buyTowerButton.addEventListener('click', placeNewTower);
 
 document.body.appendChild(buyTowerButton);
 
-// 게임 종료 패킷 전송
-function sendGameEnd() {
-  const packet = {
-    packetType: 3, // C2S_GAME_END_REQUEST
-    userId: localStorage.getItem('userId2'), // JWT 토큰을 사용할 경우 ID는 서버에서 해석함
-    finalScore: score,
-  };
-
-  serverSocket.emit('gameEnd', packet);
+function sendEvent(handlerId, payload) {
+  serverSocket.emit('event', {
+    userId,
+    clientVersion: CLIENT_VERSION,
+    packetType: handlerId,
+    payload,
+  });
 }

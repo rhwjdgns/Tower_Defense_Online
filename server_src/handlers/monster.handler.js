@@ -1,50 +1,51 @@
-import {
-  createMonsters,
-  getMonsters,
-  setMonster,
-  removeMonster,
-} from ('../models/monster.model.js');
-import { PacketType } from '../constants.js';
+import { getMonsters, setMonster, removeMonster } from '../models/monster.model.js';
 
 // 아군 몬스터 사망
-function handleDieMonster(uuid, payload) {
-  const monsters = getMonsters(uuid);
+function handleDieMonster(userId, payload) {
+  const monsters = getMonsters(userId);
   if (!monsters) {
     return { status: 'fail', message: 'Monsters not found' };
   }
-  setMonster(uuid, payload.monsterId, payload.monsterLevel)
-  removeMonster(uuid, payload.monsterId, payload.monsterLevel)
+
+  setMonster(userId, payload.monsterId, payload.monsterLevel);
+  removeMonster(userId, payload.monsterId, payload.monsterLevel);
+  console.log('아군 몬스터 사망', JSON.stringify(monsters));
   return { status: 'success', message: 'Monster is dead' };
 }
 
 // 적군 몬스터 사망
-function handleEnemyDieMonster(uuid, payload) {
-  const monsters = getMonsters(uuid);
+function handleEnemyDieMonster(userId, payload) {
+  const monsters = getMonsters(userId);
   if (!monsters) {
     return { status: 'fail', message: 'Monsters not found' };
   }
-  setMonster(uuid, payload.monsterId, payload.monsterLevel)
-  removeMonster(uuid, payload.monsterId, payload.monsterLevel)
+
+  setMonster(userId, payload.monsterId, payload.monsterLevel);
+  removeMonster(userId, payload.monsterId, payload.monsterLevel);
+  console.log('적군 몬스터 사망', JSON.stringify(monsters));
   return { status: 'success', message: 'Enemy Monster is dead' };
 }
 
 // 아군 몬스터 생성
-function handleSpawnMonster(uuid, payload) {
-  const monsters = getMonsters(uuid);
+function handleSpawnMonster(userId, payload) {
+  const monsters = getMonsters(userId);
   if (!monsters) {
     return { status: 'fail', message: 'Monsters not found' };
   }
-  setMonster(uuid, payload.monsterId, payload.monsterLevel);
+  setMonster(userId, payload.monsterId, payload.monsterLevel);
+  console.log('아군 몬스터 생성', JSON.stringify(monsters));
   return { status: 'success', message: 'Monster created' };
 }
 
 // 적군 몬스터 생성
-function handleEnemySpawnMonster(uuid, payload) {
-  const monsters = getMonsters(uuid);
+function handleEnemySpawnMonster(userId, payload) {
+  const monsters = getMonsters(userId);
   if (!monsters) {
     return { status: 'fail', message: 'Monsters not found' };
   }
-  setMonster(uuid, payload.monsterId, payload.monsterLevel);
+
+  setMonster(userId, payload.monsterId, payload.monsterLevel);
+  console.log('적군 몬스터 생성', JSON.stringify(monsters));
   return { status: 'success', message: 'Monster created' };
 }
 

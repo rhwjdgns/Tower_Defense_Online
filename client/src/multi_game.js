@@ -20,6 +20,7 @@ const progressBarMessage = document.getElementById('progressBarMessage');
 const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
 const NUM_OF_MONSTERS = 5;
+const CLIENT_VERSION = '1.0.0';
 // 게임 데이터
 let towerCost = 0;
 let monsterSpawnInterval = 1000;
@@ -149,18 +150,10 @@ function placeBase(position, isPlayer) {
     opponentBase.draw(opponentCtx, baseImage, true);
   }
 }
-function sendMonsterSpawn() {
-  const packet = {
-    packetType: 9,
-    userId: localStorage.getItem('userId'),
-    monsterLevel: monsterLevel,
-  };
-  serverSocket.emit('spawnMonster', packet);
-}
 function spawnMonster() {
   const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(newMonster);
-  sendMonsterSpawn();
+  sendEvent(9);
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 function gameLoop() {
@@ -204,6 +197,7 @@ function gameLoop() {
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
+      sendEvent(10);
       monsters.splice(i, 1);
     }
   }
@@ -341,7 +335,7 @@ function sendEvent(handlerId, payload) {
   serverSocket.emit('event', {
     userId,
     clientVersion: CLIENT_VERSION,
-    handlerId,
+    packetType: handlerId,
     payload,
   });
 }
