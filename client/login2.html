@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -44,43 +44,43 @@
       <button id="back" style="margin-top: 50px">뒤로가기</button>
     </div>
     <script>
-      document.getElementById("login").addEventListener("click", () => {
-        const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      document.getElementById('login').addEventListener('click', () => {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
 
-      fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.token) {
-          localStorage.setItem('token2', data.token);
-          localStorage.setItem('userId2', username);
-          alert('로그인 성공');
-          window.location.href = 'index.html'; 
-        } else {
-          if (data.message === 'User already logged in') {
-            alert('이미 로그인 중');
-          } else if (data.message === 'Invalid password') {
-            alert('잘못된 비밀번호');
-          } else if (data.message === 'User not found') {
-            alert('사용자를 찾을 수 없습니다');
-          } else {
-            alert('로그인 실패');
-          }
-        }
+        fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.token) {
+              localStorage.setItem('token2', data.token);
+              localStorage.setItem('userId2', username);
+              alert('로그인 성공');
+              window.location.href = 'index.html';
+            } else {
+              if (data.message === 'User already logged in') {
+                alert('이미 로그인 중');
+              } else if (data.message === 'Invalid password') {
+                alert('잘못된 비밀번호');
+              } else if (data.message === 'User not found') {
+                alert('사용자를 찾을 수 없습니다');
+              } else {
+                alert('로그인 실패');
+              }
+            }
           })
           .catch((error) => {
-            alert("로그인 실패");
+            alert('로그인 실패');
           });
       });
 
-      document.getElementById("back").addEventListener("click", () => {
-        window.location.href = "index.html";
+      document.getElementById('back').addEventListener('click', () => {
+        window.location.href = 'index.html';
       });
     </script>
   </body>

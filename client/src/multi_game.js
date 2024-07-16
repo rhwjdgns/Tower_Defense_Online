@@ -24,7 +24,7 @@ const NUM_OF_MONSTERS = 5;
 const CLIENT_VERSION = '1.0.0';
 // 게임 데이터
 let towerCost = 0;
-let monsterSpawnInterval = 1000;
+let monsterSpawnInterval = 3000;
 // 유저 데이터
 let userGold = 0;
 let base;
@@ -60,6 +60,13 @@ for (let i = 1; i <= NUM_OF_MONSTERS; i++) {
   img.src = `images/monster${i}.png`;
   monsterImages.push(img);
 }
+monsterPath = monsterPath || [];
+initialTowerCoords = initialTowerCoords || [];
+basePosition = basePosition || { x: 0, y: 0 };
+
+opponentMonsterPath = opponentMonsterPath || [];
+opponentInitialTowerCoords = opponentInitialTowerCoords || [];
+opponentBasePosition = opponentBasePosition || { x: 0, y: 0 };
 let bgm;
 function initMap() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
@@ -71,6 +78,10 @@ function initMap() {
   placeBase(opponentBasePosition, false);
 }
 function drawPath(path, context) {
+  if (!path || path.length === 0) {
+    console.error('Path is not defined or empty');
+    return;
+  }
   const segmentLength = 10;
   const imageWidth = 30;
   const imageHeight = 30;
@@ -98,12 +109,12 @@ function drawRotatedImage(image, x, y, width, height, angle, context) {
   context.drawImage(image, -width / 2, -height / 2, width, height);
   context.restore();
 }
-function getRandomPositionNearPath(maxDistance) {
-  const segmentIndex = Math.floor(Math.random() * (monsterPath.length - 1));
-  const startX = monsterPath[segmentIndex].x;
-  const startY = monsterPath[segmentIndex].y;
-  const endX = monsterPath[segmentIndex + 1].x;
-  const endY = monsterPath[segmentIndex + 1].y;
+function getRandomPositionNearPath(path, maxDistance) {
+  const segmentIndex = Math.floor(Math.random() * (path.length - 1));
+  const startX = path[segmentIndex].x;
+  const startY = path[segmentIndex].y;
+  const endX = path[segmentIndex + 1].x;
+  const endY = path[segmentIndex + 1].y;
   const t = Math.random();
   const posX = startX + t * (endX - startX);
   const posY = startY + t * (endY - startY);
@@ -150,9 +161,15 @@ function placeBase(position, isPlayer) {
   }
 }
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
-  monsters.push(newMonster);
+  const monster = new Monster(monsterPath, monsterImages, monsterLevel);
+  monsters.push(monster);
+  sendEvent(9, { hp: monster.getMaxHp() });
   // TODO. 서버로 몬스터 생성 이벤트 전송
+}
+function spawnOpponentMonster(value) {
+  const newMonster = new Monster(opponentMonsterPath, monsterImages, 0);
+  newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
+  opponentMonsters.push(newMonster);
 }
 function gameLoop() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
@@ -198,6 +215,7 @@ function gameLoop() {
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
+      sendEvent(10);
       monsters.splice(i, 1);
     }
   }
@@ -257,6 +275,7 @@ Promise.all([
   });
 
   //대결 신청
+  //대결 신청
   serverSocket.on('connect', () => {
     serverSocket.emit('event', {
       packetType: 13, // C2S_MATCH_REQUEST
@@ -312,6 +331,11 @@ Promise.all([
   });
   serverSocket.on('gameSync', (packet) => {
     placeNewOpponentTower(packet.data.opponentTowers);
+    if (packet.data.opponentMonsters !== undefined && packet.data.spawnStart !== undefined) {
+      if (packet.data.spawnStart) {
+        spawnOpponentMonster(packet.data.opponentMonsters);
+      }
+    }
   });
 });
 const buyTowerButton = document.createElement('button');

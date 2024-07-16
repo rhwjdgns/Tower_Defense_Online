@@ -29,7 +29,7 @@ const NUM_OF_MONSTERS = 5; // 몬스터 개수
 const CLIENT_VERSION = '1.0.0';
 // 게임 데이터
 let towerCost = 0; // 타워 구입 비용
-let monsterSpawnInterval = 1000; // 몬스터 생성 주기
+let monsterSpawnInterval = 3000; // 몬스터 생성 주기
 
 // 유저 데이터
 let userGold = 0; // 유저 골드
@@ -73,7 +73,13 @@ for (let i = 1; i <= NUM_OF_MONSTERS; i++) {
   img.src = `images/monster${i}.png`;
   monsterImages.push(img);
 }
+monsterPath = monsterPath || [];
+initialTowerCoords = initialTowerCoords || [];
+basePosition = basePosition || { x: 0, y: 0 };
 
+opponentMonsterPath = opponentMonsterPath || [];
+opponentInitialTowerCoords = opponentInitialTowerCoords || [];
+opponentBasePosition = opponentBasePosition || { x: 0, y: 0 };
 let bgm;
 
 function initMap() {
@@ -87,6 +93,10 @@ function initMap() {
 }
 
 function drawPath(path, context) {
+  if (!path || path.length === 0) {
+    console.error('Path is not defined or empty');
+    return;
+  }
   const segmentLength = 10; // 몬스터 경로 세그먼트 길이
   const imageWidth = 30; // 몬스터 경로 이미지 너비
   const imageHeight = 30; // 몬스터 경로 이미지 높이
@@ -119,20 +129,17 @@ function drawRotatedImage(image, x, y, width, height, angle, context) {
   context.restore();
 }
 
-function getRandomPositionNearPath(maxDistance) {
-  const segmentIndex = Math.floor(Math.random() * (monsterPath.length - 1));
-  const startX = monsterPath[segmentIndex].x;
-  const startY = monsterPath[segmentIndex].y;
-  const endX = monsterPath[segmentIndex + 1].x;
-  const endY = monsterPath[segmentIndex + 1].y;
-
+function getRandomPositionNearPath(path, maxDistance) {
+  const segmentIndex = Math.floor(Math.random() * (path.length - 1));
+  const startX = path[segmentIndex].x;
+  const startY = path[segmentIndex].y;
+  const endX = path[segmentIndex + 1].x;
+  const endY = path[segmentIndex + 1].y;
   const t = Math.random();
   const posX = startX + t * (endX - startX);
   const posY = startY + t * (endY - startY);
-
   const offsetX = (Math.random() - 0.5) * 2 * maxDistance;
   const offsetY = (Math.random() - 0.5) * 2 * maxDistance;
-
   return {
     x: posX + offsetX,
     y: posY + offsetY,
@@ -178,14 +185,18 @@ function placeBase(position, isPlayer) {
     opponentBase.draw(opponentCtx, baseImage, true);
   }
 }
-
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
-  monsters.push(newMonster);
+  const monster = new Monster(monsterPath, monsterImages, monsterLevel);
+  monsters.push(monster);
+  sendEvent(9, { hp: monster.getMaxHp() });
 
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
-
+function spawnOpponentMonster(value) {
+  const newMonster = new Monster(opponentMonsterPath, monsterImages, 0);
+  newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
+  opponentMonsters.push(newMonster);
+}
 function gameLoop() {
   // 렌더링 시에는 항상 배경 이미지부터 그려야 합니다! 그래야 다른 이미지들이 배경 이미지 위에 그려져요!
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height); // 배경 이미지 다시 그리기
@@ -238,6 +249,7 @@ function gameLoop() {
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
+      sendEvent(10);
       // TODO. 몬스터 사망 이벤트 전송
       monsters.splice(i, 1);
     }
@@ -369,6 +381,11 @@ Promise.all([
   // 상태 동기화 이벤트 수신
   serverSocket.on('gameSync', (packet) => {
     placeNewOpponentTower(packet.data.opponentTowers);
+    if (packet.data.opponentMonsters !== undefined && packet.data.spawnStart !== undefined) {
+      if (packet.data.spawnStart) {
+        spawnOpponentMonster(packet.data.opponentMonsters);
+      }
+    }
   });
 });
 

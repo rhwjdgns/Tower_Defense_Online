@@ -9,7 +9,6 @@ import { prisma } from './utils/prisma/index.js';
 import initSocket from './init/socket.js';
 import cors from 'cors';
 
-
 // __dirname을 ES 모듈에서 사용하기 위한 설정
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -122,5 +121,8 @@ app.post('/api/login', async (req, res) => {
 initSocket(server);
 
 server.listen(PORT, async () => {
-  console.log(`Server is running on port ${PORT}`);
+  const address = server.address();
+  const host = address.address === '::' ? 'localhost' : address.address; // IPv6의 ::는 localhost를 의미함
+  const port = address.port;
+  console.log(`Server가 http://${host}:${port} 에서 열렸습니다`);
 });
