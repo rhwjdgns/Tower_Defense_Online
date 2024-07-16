@@ -21,6 +21,7 @@ const progressBarMessage = document.getElementById('progressBarMessage');
 const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
 const NUM_OF_MONSTERS = 5;
+const CLIENT_VERSION = '1.0.0';
 // 게임 데이터
 let towerCost = 0;
 let monsterSpawnInterval = 1000;
@@ -128,7 +129,17 @@ function placeNewTower() {
   const { x, y } = getRandomPositionNearPath(200);
   const tower = new Tower(x, y);
   towers.push(tower);
+  sendEvent(5, { x, y, level: 1 });
+
   tower.draw(ctx, towerImage);
+}
+function placeNewOpponentTower(value) {
+  opponentTowers = [];
+  value.forEach((element) => {
+    const tower = new Tower(element.tower.X, element.tower.Y);
+    opponentTowers.push(tower);
+  });
+  console.log(opponentTowers);
 }
 function placeBase(position, isPlayer) {
   if (isPlayer) {
@@ -253,7 +264,7 @@ Promise.all([
   serverSocket.on('connect', () => {
     serverSocket.emit('event', {
       packetType: 13, // C2S_MATCH_REQUEST
-      userId: localStorage.getItem('userId')
+      userId: localStorage.getItem('userId'),
     });
     console.log('client checking: ', userId);
   });
@@ -303,15 +314,16 @@ Promise.all([
     }
   });
   serverSocket.on('gameSync', (data) => {
-    const { playerData, opponentData } = data;
-    userGold = playerData.userGold;
-    base.hp = playerData.baseHp;
-    score = playerData.score;
-    monsters = playerData.monsters;
-    towers = playerData.towers;
-    opponentBase.hp = opponentData.baseHp;
-    opponentMonsters = opponentData.monsters;
-    opponentTowers = opponentData.towers;
+    // const { playerData, opponentData } = data;
+    // userGold = playerData.userGold;
+    // base.hp = playerData.baseHp;
+    // score = playerData.score;
+    // monsters = playerData.monsters;
+    // towers = playerData.towers;
+    // opponentBase.hp = opponentData.baseHp;
+    // opponentMonsters = opponentData.monsters;
+    // opponentTowers = opponentData.towers;
+    placeNewOpponentTower(data);
   });
 });
 const buyTowerButton = document.createElement('button');
@@ -325,16 +337,12 @@ buyTowerButton.style.cursor = 'pointer';
 buyTowerButton.style.display = 'none';
 buyTowerButton.addEventListener('click', placeNewTower);
 document.body.appendChild(buyTowerButton);
-function sendGameEnd() {
-  const packet = {
-    packetType: 3,//PacketType.C2S_GAME_END_REQUEST,
-    userId: localStorage.getItem('userId'),
-    finalScore: score
-  };
-  serverSocket.emit('gameEnd', packet);
+
+function sendEvent(handlerId, payload) {
+  serverSocket.emit('event', {
+    userId,
+    clientVersion: CLIENT_VERSION,
+    packetType: handlerId,
+    payload,
+  });
 }
-
-
-
-
-

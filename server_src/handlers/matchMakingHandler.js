@@ -1,10 +1,8 @@
 import { PacketType, RESOLUTION_HEIGHT, RESOLUTION_WIDTH } from '../constants.js';
 import { createPlayData, GameData, getPlayData } from '../models/playData.model.js';
-
-//유저 대기열 (대결 신청시)
+import { createTowers, setTower } from '../models/tower.model.js';
 let queue = [];
-
-//게임 초기 값
+let CLIENTS = {};
 function generateRandomMonsterPath() {
   const canvasHeight = RESOLUTION_HEIGHT;
   const canvasWidth = RESOLUTION_WIDTH;
@@ -64,6 +62,8 @@ function handleMatchRequest(socket, data) {
   if (queue.length >= 2) {
     const player1 = queue.shift();
     const player2 = queue.shift();
+    CLIENTS[player1.userId] = player1.socket;
+    CLIENTS[player2.userId] = player2.socket;
 
     console.log(`매칭 성공: ${player1.userId} vs ${player2.userId}`);
     
@@ -72,6 +72,9 @@ function handleMatchRequest(socket, data) {
       packetType: PacketType.S2C_MATCH_FOUND_NOTIFICATION,
       opponentId: player2.userId,
     };
+    //타워 생성
+    createTowers(player1.userId);
+    createTowers(player2.userId);
 
 
     //게임초기값 (monster path, initial towers, game data)
@@ -81,8 +84,14 @@ function handleMatchRequest(socket, data) {
     let player2InitialTowerCoords = [];
 
     for (let i = 0; i < 5; i++) {
-      player1InitialTowerCoords.push(getRandomPositionNearPath(200, player1MonsterPath));
-      player2InitialTowerCoords.push(getRandomPositionNearPath(200, player2MonsterPath));
+      const towerCoords1 = getRandomPositionNearPath(200, player1MonsterPath);
+      const towerCoords2 = getRandomPositionNearPath(200, player2MonsterPath);
+
+      player1InitialTowerCoords.push(towerCoords1);
+      player2InitialTowerCoords.push(towerCoords2);
+
+      setTower(player1.userId, towerCoords1.x, towerCoords1.y, 1);
+      setTower(player2.userId, towerCoords2.x, towerCoords2.y, 1);
     }
 
     createPlayData(
@@ -94,6 +103,8 @@ function handleMatchRequest(socket, data) {
         player2MonsterPath,
         player2InitialTowerCoords,
         player2MonsterPath[player2MonsterPath.length - 1],
+        player2.userId,
+        player2.socket
       ),
     );
     createPlayData(
@@ -105,6 +116,8 @@ function handleMatchRequest(socket, data) {
         player1MonsterPath,
         player1InitialTowerCoords,
         player1MonsterPath[player1MonsterPath.length - 1],
+        player1.userId,
+        player1.socket
       ),
     );
 
@@ -117,4 +130,4 @@ function handleMatchRequest(socket, data) {
   }
 }
 
-export { handleMatchRequest };
+export { handleMatchRequest, CLIENTS };
