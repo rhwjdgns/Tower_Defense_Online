@@ -6,6 +6,7 @@ const initSocket = (server) => {
   const io = new SocketIO(server);
   io.on('connection', (socket) => {
     console.log(`New user connected: ${socket.id}`);
+    
     socket.on('event', (packet) => {
       console.log(`Received packet: ${JSON.stringify(`패킷 타입 : ${packet.packetType} 유저 아이디 : ${packet.userId}`)}`);
       switch (packet.packetType) {
