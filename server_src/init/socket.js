@@ -7,7 +7,7 @@ const initSocket = (server) => {
 
   io.on('connection', (socket) => {
     console.log(`New user connected: ${socket.id}`);
-
+    
     socket.on('event', (packet) => {
       console.log(`Received packet: ${JSON.stringify(packet)}`);
       switch (packet.packetType) {
