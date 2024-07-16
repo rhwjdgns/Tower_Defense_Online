@@ -308,6 +308,8 @@ Promise.all([
       }, 300);
     }
   });
+
+
   serverSocket.on('gameOver', (data) => {
     bgm.pause();
     const { isWin } = data;

@@ -1,6 +1,7 @@
 import { Server as SocketIO } from 'socket.io';
 import { handleMatchRequest } from '../handlers/matchMakingHandler.js';
 import { towerAddOnHandler, towerAttackHandler } from '../handlers/tower.handler.js';
+import { activeSessions } from '../app.js';
 import {
   handleDieMonster,
   handleEnemyDieMonster,
@@ -14,9 +15,10 @@ const initSocket = (server) => {
     console.log(`New user connected: ${socket.id}`);
 
     socket.on('event', (packet) => {
-      console.log(
-        `Received packet: ${JSON.stringify(`${packet.packetType} 유저 아이디 : ${packet.userId}`)}`,
-      );
+      console.log(`Received packet: ${JSON.stringify(`패킷 타입 : ${packet.packetType} 유저 아이디 : ${packet.userId}`)}`);
+
+      socket.userId = packet.userId;
+
       switch (packet.packetType) {
         case 13: // C2S_MATCH_REQUEST
           handleMatchRequest(socket, packet);
@@ -45,6 +47,13 @@ const initSocket = (server) => {
     });
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.id}`);
+
+      if (socket.userId && activeSessions[socket.userId]) {
+        delete activeSessions[socket.userId];
+        console.log(`Session for user ${socket.userId} has been invalidated.`);
+
+        
+      }
     });
   });
 };
