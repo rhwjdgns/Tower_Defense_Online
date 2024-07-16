@@ -1,6 +1,7 @@
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
+
 if (!localStorage.getItem('token')) {
   alert('로그인이 필요합니다.');
   location.href = '/login';
@@ -241,6 +242,8 @@ Promise.all([
       location.href = '/login';
     }
   });
+
+  //대결 신청 
   serverSocket.on('connect', () => {
     serverSocket.emit('event', {
       packetType: 13, // C2S_MATCH_REQUEST

@@ -20,6 +20,7 @@ const server = createServer(app);
 const PORT = 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
+//현재 접속한 유저들의 세션 담기
 const activeSessions = {};
 
 
@@ -99,6 +100,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid password' });
     }
 
+    //중복 로그인 방지 
     if (activeSessions[user.userId]) {
       return res.status(400).json({ message: 'User already logged in' });
     }

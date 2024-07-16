@@ -61,7 +61,7 @@
           localStorage.setItem('token', data.token);
           localStorage.setItem('userId', username);
           alert('로그인 성공');
-          window.location.href = 'index.html'; // Redirect to index.html on successful login
+          window.location.href = 'index.html'; 
         } else {
           if (data.message === 'User already logged in') {
             alert('이미 로그인 중');
