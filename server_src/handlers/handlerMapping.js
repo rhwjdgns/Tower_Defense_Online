@@ -6,6 +6,7 @@
 import { PacketType } from '../constants.js';
 import { handleRegister, handleLogin } from './registerHandler.js';
 import { handleGameEnd, handleGameSync, sendGameOver } from './gameHandler.js';
+import { handleGameEnd, handleGameSync, sendGameOver } from './gameHandler.js';
 import { handleMatchRequest } from './matchMakingHandler.js';
 import { towerAddOnHandler, towerAttackHandler } from './tower.handler.js';
 import {

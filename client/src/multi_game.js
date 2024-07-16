@@ -60,6 +60,13 @@ for (let i = 1; i <= NUM_OF_MONSTERS; i++) {
   img.src = `images/monster${i}.png`;
   monsterImages.push(img);
 }
+monsterPath = monsterPath || [];
+initialTowerCoords = initialTowerCoords || [];
+basePosition = basePosition || { x: 0, y: 0 };
+
+opponentMonsterPath = opponentMonsterPath || [];
+opponentInitialTowerCoords = opponentInitialTowerCoords || [];
+opponentBasePosition = opponentBasePosition || { x: 0, y: 0 };
 let bgm;
 function initMap() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
@@ -71,6 +78,10 @@ function initMap() {
   placeBase(opponentBasePosition, false);
 }
 function drawPath(path, context) {
+  if (!path || path.length === 0) {
+    console.error('Path is not defined or empty');
+    return;
+  }
   const segmentLength = 10;
   const imageWidth = 30;
   const imageHeight = 30;
@@ -98,12 +109,12 @@ function drawRotatedImage(image, x, y, width, height, angle, context) {
   context.drawImage(image, -width / 2, -height / 2, width, height);
   context.restore();
 }
-function getRandomPositionNearPath(maxDistance) {
-  const segmentIndex = Math.floor(Math.random() * (monsterPath.length - 1));
-  const startX = monsterPath[segmentIndex].x;
-  const startY = monsterPath[segmentIndex].y;
-  const endX = monsterPath[segmentIndex + 1].x;
-  const endY = monsterPath[segmentIndex + 1].y;
+function getRandomPositionNearPath(path, maxDistance) {
+  const segmentIndex = Math.floor(Math.random() * (path.length - 1));
+  const startX = path[segmentIndex].x;
+  const startY = path[segmentIndex].y;
+  const endX = path[segmentIndex + 1].x;
+  const endY = path[segmentIndex + 1].y;
   const t = Math.random();
   const posX = startX + t * (endX - startX);
   const posY = startY + t * (endY - startY);
@@ -204,6 +215,7 @@ function gameLoop() {
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
+      sendEvent(10);
       monsters.splice(i, 1);
     }
   }
@@ -262,6 +274,7 @@ Promise.all([
     }
   });
 
+  //대결 신청
   //대결 신청
   serverSocket.on('connect', () => {
     serverSocket.emit('event', {

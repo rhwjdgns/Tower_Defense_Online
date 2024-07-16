@@ -1,87 +1,87 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="author" content="Changmin Kang" />
-  <title>로그인</title>
-  <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #2d2d2d;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
-    .form-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .form-container input {
-      margin: 10px;
-      padding: 10px;
-      font-size: 16px;
-    }
-    .form-container button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <div class="form-container">
-    <img src="/images/logo.png" alt="logo" />
-    <h2>로그인</h2>
-    <input type="text" id="username" placeholder="아이디" />
-    <input type="password" id="password" placeholder="비밀번호" />
-    <button id="login">로그인</button>
-    <button id="back" style="margin-top: 50px">뒤로가기</button>
-  </div>
-  <script>
-    document.getElementById("login").addEventListener("click", () => {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="Changmin Kang" />
+    <title>로그인</title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #2d2d2d;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      .form-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .form-container input {
+        margin: 10px;
+        padding: 10px;
+        font-size: 16px;
+      }
+      .form-container button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-container">
+      <img src="/images/logo.png" alt="logo" />
+      <h2>로그인</h2>
+      <input type="text" id="username" placeholder="아이디" />
+      <input type="password" id="password" placeholder="비밀번호" />
+      <button id="login">로그인</button>
+      <button id="back" style="margin-top: 50px">뒤로가기</button>
+    </div>
+    <script>
+      document.getElementById('login').addEventListener('click', () => {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
 
-      fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('userId', username);
-          alert('로그인 성공');
-          window.location.href = 'index.html'; 
-        } else {
-          if (data.message === 'User already logged in') {
-            alert('이미 로그인 중');
-          } else if (data.message === 'Invalid password') {
-            alert('잘못된 비밀번호');
-          } else if (data.message === 'User not found') {
-            alert('사용자를 찾을 수 없습니다');
-          } else {
+        fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.token) {
+              localStorage.setItem('token', data.token);
+              localStorage.setItem('userId', username);
+              alert('로그인 성공');
+              window.location.href = 'index.html';
+            } else {
+              if (data.message === 'User already logged in') {
+                alert('이미 로그인 중');
+              } else if (data.message === 'Invalid password') {
+                alert('잘못된 비밀번호');
+              } else if (data.message === 'User not found') {
+                alert('사용자를 찾을 수 없습니다');
+              } else {
+                alert('로그인 실패');
+              }
+            }
+          })
+          .catch((error) => {
             alert('로그인 실패');
-          }
-        }
-      })
-      .catch((error) => {
-        alert("로그인 실패");
+          });
       });
-    });
 
-    document.getElementById("back").addEventListener("click", () => {
-      window.location.href = "index.html";
-    });
-  </script>
-</body>
+      document.getElementById('back').addEventListener('click', () => {
+        window.location.href = 'index.html';
+      });
+    </script>
+  </body>
 </html>
