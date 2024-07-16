@@ -1,5 +1,6 @@
 import { Server as SocketIO } from 'socket.io';
 import { handleMatchRequest } from '../handlers/matchMakingHandler.js';
+import { handleGameSyncRequest } from '../handlers/gameSyncHandler.js';
 
 const initSocket = (server) => {
   const io = new SocketIO(server);
@@ -17,6 +18,10 @@ const initSocket = (server) => {
         default:
           console.log(`Unknown packet type: ${packet.packetType}`);
       }
+    });
+
+    socket.on('gameSyncRequest', (packet) => {
+      handleGameSyncRequest(socket, packet);
     });
 
     socket.on('disconnect', () => {
