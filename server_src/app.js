@@ -7,6 +7,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from './utils/prisma/index.js';
 import initSocket from './init/socket.js';
+import cors from 'cors';
+
 
 // __dirname을 ES 모듈에서 사용하기 위한 설정
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +19,15 @@ const server = createServer(app);
 
 const PORT = 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
+// 특정 도메인만 허용하는 CORS 설정
+const corsOptions = {
+  origin: '*', // 허용하고자 하는 도메인
+  allowedHeaders: ['Content-type', 'Authorization'], // JWT
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions)); // CORS 미들웨어 사용
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
