@@ -1,7 +1,8 @@
 import { PacketType, RESOLUTION_HEIGHT, RESOLUTION_WIDTH } from '../constants.js';
 import { createPlayData, GameData, getPlayData } from '../models/playData.model.js';
-import { createTowers, getTowers, setTower } from '../models/tower.model.js';
+import { createTowers, setTower } from '../models/tower.model.js';
 let queue = [];
+let CLIENTS = {};
 function generateRandomMonsterPath() {
   const canvasHeight = RESOLUTION_HEIGHT;
   const canvasWidth = RESOLUTION_WIDTH;
@@ -56,6 +57,9 @@ function handleMatchRequest(socket, data) {
   if (queue.length >= 2) {
     const player1 = queue.shift();
     const player2 = queue.shift();
+    CLIENTS[player1.userId] = player1.socket;
+    CLIENTS[player2.userId] = player2.socket;
+
     console.log(`매칭 성공: ${player1.userId} vs ${player2.userId}`);
     const packet = {
       packetType: PacketType.S2C_MATCH_FOUND_NOTIFICATION,
@@ -90,6 +94,8 @@ function handleMatchRequest(socket, data) {
         player2MonsterPath,
         player2InitialTowerCoords,
         player2MonsterPath[player2MonsterPath.length - 1],
+        player2.userId,
+        player2.socket
       ),
     );
     createPlayData(
@@ -101,6 +107,8 @@ function handleMatchRequest(socket, data) {
         player1MonsterPath,
         player1InitialTowerCoords,
         player1MonsterPath[player1MonsterPath.length - 1],
+        player1.userId,
+        player1.socket
       ),
     );
 
@@ -112,4 +120,4 @@ function handleMatchRequest(socket, data) {
   }
 }
 
-export { handleMatchRequest };
+export { handleMatchRequest, CLIENTS };

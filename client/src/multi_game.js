@@ -132,6 +132,14 @@ function placeNewTower() {
 
   tower.draw(ctx, towerImage);
 }
+function placeNewOpponentTower(value) {
+  opponentTowers = [];
+  value.forEach((element) => {
+    const tower = new Tower(element.tower.X, element.tower.Y);
+    opponentTowers.push(tower);
+  });
+  console.log(opponentTowers);
+}
 function placeBase(position, isPlayer) {
   if (isPlayer) {
     base = new Base(position.x, position.y, baseHp);
@@ -295,15 +303,16 @@ Promise.all([
     }
   });
   serverSocket.on('gameSync', (data) => {
-    const { playerData, opponentData } = data;
-    userGold = playerData.userGold;
-    base.hp = playerData.baseHp;
-    score = playerData.score;
-    monsters = playerData.monsters;
-    towers = playerData.towers;
-    opponentBase.hp = opponentData.baseHp;
-    opponentMonsters = opponentData.monsters;
-    opponentTowers = opponentData.towers;
+    // const { playerData, opponentData } = data;
+    // userGold = playerData.userGold;
+    // base.hp = playerData.baseHp;
+    // score = playerData.score;
+    // monsters = playerData.monsters;
+    // towers = playerData.towers;
+    // opponentBase.hp = opponentData.baseHp;
+    // opponentMonsters = opponentData.monsters;
+    // opponentTowers = opponentData.towers;
+    placeNewOpponentTower(data);
   });
 });
 const buyTowerButton = document.createElement('button');

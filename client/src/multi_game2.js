@@ -49,8 +49,8 @@ let opponentBase; // 상대방 기지 객체
 let opponentMonsterPath; // 상대방 몬스터 경로
 let opponentInitialTowerCoords; // 상대방 초기 타워 좌표
 let opponentBasePosition; // 상대방 기지 좌표
-const opponentMonsters = []; // 상대방 몬스터 목록
-const opponentTowers = []; // 상대방 타워 목록
+let opponentMonsters = []; // 상대방 몬스터 목록
+let opponentTowers = []; // 상대방 타워 목록
 
 let isInitGame = false;
 
@@ -160,6 +160,14 @@ function placeNewTower() {
 
   sendEvent(5, { x, y, level: 1 });
   tower.draw(ctx, towerImage);
+}
+function placeNewOpponentTower(value) {
+  opponentTowers = [];
+  value.forEach((element) => {
+    const tower = new Tower(element.tower.X, element.tower.Y);
+    opponentTowers.push(tower);
+  });
+  console.log(opponentTowers);
 }
 
 function placeBase(position, isPlayer) {
@@ -358,19 +366,20 @@ Promise.all([
 
   // 상태 동기화 이벤트 수신
   serverSocket.on('gameSync', (data) => {
-    const { playerData, opponentData } = data;
+    // const { playerData, opponentData } = data;
 
-    // 유저 데이터 동기화
-    userGold = playerData.userGold;
-    base.hp = playerData.baseHp;
-    score = playerData.score;
-    monsters = playerData.monsters;
-    towers = playerData.towers;
+    // // 유저 데이터 동기화
+    // userGold = playerData.userGold;
+    // base.hp = playerData.baseHp;
+    // score = playerData.score;
+    // monsters = playerData.monsters;
+    // towers = playerData.towers;
 
-    // 상대방 데이터 동기화
-    opponentBase.hp = opponentData.baseHp;
-    opponentMonsters = opponentData.monsters;
-    opponentTowers = opponentData.towers;
+    // // 상대방 데이터 동기화
+    // opponentBase.hp = opponentData.baseHp;
+    // opponentMonsters = opponentData.monsters;
+    // opponentTowers = opponentData.towers;
+    placeNewOpponentTower(data);
   });
 });
 

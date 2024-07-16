@@ -7,13 +7,13 @@ const initSocket = (server) => {
   io.on('connection', (socket) => {
     console.log(`New user connected: ${socket.id}`);
     socket.on('event', (packet) => {
-      console.log(`Received packet: ${JSON.stringify(packet)}`);
+      console.log(`Received packet: ${JSON.stringify(`패킷 타입 : ${packet.packetType} 유저 아이디 : ${packet.userId}`)}`);
       switch (packet.packetType) {
         case 13: // C2S_MATCH_REQUEST
           handleMatchRequest(socket, packet);
           break;
         case 5:
-          towerAddOnHandler(packet.userId, packet.payload);
+          towerAddOnHandler(socket, packet.userId, packet.payload);
           break;
         // 다른 이벤트 핸들러 추가
         default:
