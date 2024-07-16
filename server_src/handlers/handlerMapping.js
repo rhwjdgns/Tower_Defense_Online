@@ -7,7 +7,7 @@ import { PacketType } from '../constants.js';
 import { handleRegister, handleLogin } from './registerHandler.js';
 import { handleGameEnd, handleGameSync, sendGameOver } from './gameHandler.js';
 import { handleMatchRequest } from './matchMakingHandler.js';
-import { towerAddOnHandler } from './tower.handler.js';
+import { towerAddOnHandler, towerAttackHandler } from './tower.handler.js';
 import {
   handleDieMonster,
   handleEnemyDieMonster,
@@ -24,6 +24,7 @@ const handlerMapping = {
   [PacketType.S2C_GAME_OVER_NOTIFICATION]: sendGameOver,
   [PacketType.C2S_MATCH_REQUEST]: handleMatchRequest,
   [PacketType.C2S_TOWER_BUY]: towerAddOnHandler,
+  [PacketType.C2S_TOWER_ATTACK]: towerAttackHandler,
   [PacketType.C2S_SPAWN_MONSTER]: handleSpawnMonster,
   [PacketType.S2C_ENEMY_SPAWN_MONSTER]: handleEnemySpawnMonster,
   [PacketType.S2C_ENEMY_DIE_MONSTER]: handleEnemyDieMonster,

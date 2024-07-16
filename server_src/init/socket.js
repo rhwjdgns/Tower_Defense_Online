@@ -1,6 +1,6 @@
 import { Server as SocketIO } from 'socket.io';
 import { handleMatchRequest } from '../handlers/matchMakingHandler.js';
-import { towerAddOnHandler } from '../handlers/tower.handler.js';
+import { towerAddOnHandler, towerAttackHandler } from '../handlers/tower.handler.js';
 import {
   handleDieMonster,
   handleEnemyDieMonster,
@@ -15,7 +15,7 @@ const initSocket = (server) => {
 
     socket.on('event', (packet) => {
       console.log(
-        `Received packet: ${JSON.stringify(`패킷 타입 : ${packet.packetType} 유저 아이디 : ${packet.userId}`)}`,
+        `Received packet: ${JSON.stringify(`${packet.packetType} 유저 아이디 : ${packet.userId}`)}`,
       );
       switch (packet.packetType) {
         case 13: // C2S_MATCH_REQUEST
@@ -23,6 +23,9 @@ const initSocket = (server) => {
           break;
         case 5:
           towerAddOnHandler(socket, packet.userId, packet.payload);
+          break;
+        case 6:
+          towerAttackHandler(socket, packet.userId, packet.payload);
           break;
         case 9: // C2S_SPAWN_MONSTER
           handleSpawnMonster(packet.userId, packet.payload);
