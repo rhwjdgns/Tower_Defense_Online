@@ -1,6 +1,12 @@
 import { Server as SocketIO } from 'socket.io';
 import { handleMatchRequest } from '../handlers/matchMakingHandler.js';
 import { towerAddOnHandler, towerAttackHandler } from '../handlers/tower.handler.js';
+import {
+  handleDieMonster,
+  handleEnemyDieMonster,
+  handleEnemySpawnMonster,
+  handleSpawnMonster,
+} from '../handlers/monster.handler.js';
 
 const initSocket = (server) => {
   const io = new SocketIO(server);
@@ -21,6 +27,17 @@ const initSocket = (server) => {
         case 6:
           towerAttackHandler(socket, packet.userId, packet.payload);
           break;
+        case 9: // C2S_SPAWN_MONSTER
+          handleSpawnMonster(socket, packet.userId, packet.payload);
+          break;
+        case 11: // S2C_ENEMY_SPAWN_MONSTER
+          handleEnemySpawnMonster(packet.userId, packet.payload);
+          break;
+        case 10: // C2S_DIE_MONSTER
+          handleDieMonster(packet.userId, packet.payload);
+          break;
+        case 12: // S2C_ENEMY_DIE_MONSTER
+          handleEnemyDieMonster(packet.userId, packet.payload);
         // 다른 이벤트 핸들러 추가
         default:
           console.log(`Unknown packet type: ${packet.packetType}`);

@@ -23,5 +23,4 @@ export const PacketType = {
   C2S_REGISTER_REQUEST: 18,
 };
 
-
 // module.exports = { PacketType };

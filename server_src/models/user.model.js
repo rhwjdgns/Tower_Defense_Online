@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prisma/index.js';
 
-const users =[];
+const users = [];
 
 // Add a user to the database when click "start game"
 export const addUser = (user) => {
