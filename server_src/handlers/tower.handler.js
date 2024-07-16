@@ -52,6 +52,6 @@ export const towerAttackHandler = (socket, userId, payload) => {
 
   sendGameSync(socket, userId);
 
-  console.log(`타워 공격 성공!!! : ${payload.hp}`);
+  //console.log(`타워 공격 성공!!! : ${payload.hp}`);
   //몬스터 인덱스로 맞춘 몬스터 찾기
 };
