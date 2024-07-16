@@ -21,7 +21,7 @@ const PORT = 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 //현재 접속한 유저들의 세션 담기
-const activeSessions = {};
+export const activeSessions = {};
 
 
 // 특정 도메인만 허용하는 CORS 설정

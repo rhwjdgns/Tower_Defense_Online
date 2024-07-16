@@ -9,7 +9,7 @@ if (!localStorage.getItem('token2')) {
 
 const userId = localStorage.getItem('userId2');
 if (!userId) {
-  alert('ㅎㅎㅎㅎㅎㅎㅎ 필요합니다.');
+  alert('유저 아이디가 필요합니다');
   location.href = '/login';
 }
 
