@@ -29,7 +29,7 @@ const NUM_OF_MONSTERS = 5; // 몬스터 개수
 const CLIENT_VERSION = '1.0.0';
 // 게임 데이터
 let towerCost = 0; // 타워 구입 비용
-let monsterSpawnInterval = 1000; // 몬스터 생성 주기
+let monsterSpawnInterval = 3000; // 몬스터 생성 주기
 
 // 유저 데이터
 let userGold = 0; // 유저 골드
@@ -39,7 +39,6 @@ let monsterLevel = 0; // 몬스터 레벨
 let monsterPath; // 몬스터 경로
 let initialTowerCoords; // 초기 타워 좌표
 let basePosition; // 기지 좌표
-let monsterIndex = [];
 const monsters = []; // 유저 몬스터 목록
 const towers = []; // 유저 타워 목록
 let score = 0; // 게임 점수
@@ -181,20 +180,17 @@ function placeBase(position, isPlayer) {
 }
 
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
-  monsters.push(newMonster);
-  sendEvent(9, monsterIndex, Monster.hp);
+  const monster = new Monster(monsterPath, monsterImages, monsterLevel);
+  monsters.push(monster);
+  sendEvent(9, { hp: monster.getMaxHp() });
 
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
-// function spawnOpponentMonster(value) {
-//   opponentMonsters = [];
-//   value.forEach((element) => {
-//     const monster = new Monster(element.monster.monsterIndex, Monster.hp);
-//     opponentMonsters.push(monster);
-//   });
-// }
-
+function spawnOpponentMonster(value) {
+  const newMonster = new Monster(opponentMonsterPath, monsterImages, 0);
+  newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
+  opponentMonsters.push(newMonster);
+}
 function gameLoop() {
   // 렌더링 시에는 항상 배경 이미지부터 그려야 합니다! 그래야 다른 이미지들이 배경 이미지 위에 그려져요!
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height); // 배경 이미지 다시 그리기
@@ -378,6 +374,11 @@ Promise.all([
   // 상태 동기화 이벤트 수신
   serverSocket.on('gameSync', (packet) => {
     placeNewOpponentTower(packet.data.opponentTowers);
+    if (packet.data.opponentMonsters !== undefined && packet.data.spawnStart !== undefined) {
+      if (packet.data.spawnStart) {
+        spawnOpponentMonster(packet.data.opponentMonsters);
+      }
+    }
   });
 });
 

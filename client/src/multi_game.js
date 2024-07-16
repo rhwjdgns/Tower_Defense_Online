@@ -24,7 +24,7 @@ const NUM_OF_MONSTERS = 5;
 const CLIENT_VERSION = '1.0.0';
 // 게임 데이터
 let towerCost = 0;
-let monsterSpawnInterval = 1000;
+let monsterSpawnInterval = 3000;
 // 유저 데이터
 let userGold = 0;
 let base;
@@ -33,7 +33,6 @@ let monsterLevel = 0;
 let monsterPath;
 let initialTowerCoords;
 let basePosition;
-let monsterIndex = [];
 let monsters = [];
 let towers = [];
 let score = 0;
@@ -153,16 +152,14 @@ function placeBase(position, isPlayer) {
 function spawnMonster() {
   const monster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(monster);
-  sendEvent(9, monsterIndex, Monster.hp);
+  sendEvent(9, { hp: monster.getMaxHp() });
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
-// function spawnOpponentMonster(value) {
-//   opponentMonsters = [];
-//   value.forEach((element) => {
-//     const monster = new Monster(element.monster.monsterIndex, Monster.hp);
-//     opponentMonsters.push(monster);
-//   });
-// }
+function spawnOpponentMonster(value) {
+  const newMonster = new Monster(opponentMonsterPath, monsterImages, 0);
+  newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
+  opponentMonsters.push(newMonster);
+}
 function gameLoop() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
   drawPath(monsterPath, ctx);
@@ -319,6 +316,11 @@ Promise.all([
   });
   serverSocket.on('gameSync', (packet) => {
     placeNewOpponentTower(packet.data.opponentTowers);
+    if (packet.data.opponentMonsters !== undefined && packet.data.spawnStart !== undefined) {
+      if (packet.data.spawnStart) {
+        spawnOpponentMonster(packet.data.opponentMonsters);
+      }
+    }
   });
 });
 const buyTowerButton = document.createElement('button');

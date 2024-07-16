@@ -28,7 +28,7 @@ const initSocket = (server) => {
           towerAttackHandler(socket, packet.userId, packet.payload);
           break;
         case 9: // C2S_SPAWN_MONSTER
-          handleSpawnMonster(packet.userId, packet.payload);
+          handleSpawnMonster(socket, packet.userId, packet.payload);
           break;
         case 11: // S2C_ENEMY_SPAWN_MONSTER
           handleEnemySpawnMonster(packet.userId, packet.payload);

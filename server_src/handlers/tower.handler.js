@@ -5,7 +5,7 @@ import { sendGameSync } from './gameSyncHandler.js';
 export const towerAddOnHandler = (socket, userId, payload) => {
   setTower(userId, payload.x, payload.y, payload.level);
 
-  sendGameSync(socket, userId);
+  sendGameSync(socket, userId, false);
 
   return {
     status: 'success',
@@ -50,7 +50,7 @@ export const towerRemoveHandler = (userId, payload) => {
 export const towerAttackHandler = (socket, userId, payload) => {
   payload.hp -= payload.damage;
 
-  sendGameSync(socket, userId);
+  sendGameSync(socket, userId, false);
 
   //console.log(`타워 공격 성공!!! : ${payload.hp}`);
   //몬스터 인덱스로 맞춘 몬스터 찾기

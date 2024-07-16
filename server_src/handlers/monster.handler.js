@@ -1,7 +1,5 @@
 import { getMonsters, setMonster, removeMonster } from '../models/monster.model.js';
-import { getPlayData } from '../models/playData.model.js';
 import { sendGameSync } from './gameSyncHandler.js';
-import { CLIENTS } from './matchMakingHandler.js';
 
 // 아군 몬스터 사망
 function handleDieMonster(userId, payload) {
@@ -30,18 +28,19 @@ function handleEnemyDieMonster(userId, payload) {
 }
 
 // 아군 몬스터 생성
-function handleSpawnMonster(userId, payload) {
-  const monsters = getMonsters(userId);
-  if (!monsters) {
-    return { status: 'fail', message: 'Monsters not found' };
-  }
-  setMonster(userId, payload.monsterId, payload.monsterIndex);
-  const opponentPlayerId = getPlayData(userId).getOpponentInfo();
-  const opponentClient = CLIENTS[opponentPlayerId];
-  const mainMonster = getMonsters(userId);
-  const opponentMonsters = getMonsters(opponentPlayerId);
-  sendGameSync(socket, opponentMonsters, opponentClient, mainMonster);
-  console.log('아군 몬스터 생성', JSON.stringify(`Create Monster: ${payload.monsterIndex}`));
+function handleSpawnMonster(socket, userId, payload) {
+  // const monsters = getMonsters(userId);
+  // if (!monsters) {
+  //   return { status: 'fail', message: 'Monsters not found' };
+  // }
+  const monsterIndex = setMonster(userId, payload.hp);
+  // const opponentPlayerId = getPlayData(userId).getOpponentInfo();
+  // const opponentClient = CLIENTS[opponentPlayerId];
+  // const mainMonster = getMonsters(userId);
+  // const opponentMonsters = getMonsters(opponentPlayerId);
+  // sendGameSync(socket, opponentMonsters, opponentClient, mainMonster);
+  sendGameSync(socket, userId, true);
+  console.log('아군 몬스터 생성', JSON.stringify(`Create Monster: ${monsterIndex}`));
   return { status: 'success', message: 'Monster created' };
 }
 
