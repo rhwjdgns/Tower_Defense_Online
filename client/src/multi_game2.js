@@ -167,7 +167,6 @@ function placeNewOpponentTower(value) {
     const tower = new Tower(element.tower.X, element.tower.Y);
     opponentTowers.push(tower);
   });
-  console.log(opponentTowers);
 }
 
 function placeBase(position, isPlayer) {
@@ -211,7 +210,10 @@ function gameLoop() {
         Math.pow(tower.x - monster.x, 2) + Math.pow(tower.y - monster.y, 2),
       );
       if (distance < tower.range) {
-        tower.attack(monster);
+        const Attacked = tower.attack(monster);
+        if (Attacked) {
+          sendEvent(6, { damage: tower.getAttackPower(), hp: monster.hp });
+        }
       }
     });
   });
@@ -365,21 +367,8 @@ Promise.all([
   });
 
   // 상태 동기화 이벤트 수신
-  serverSocket.on('gameSync', (data) => {
-    // const { playerData, opponentData } = data;
-
-    // // 유저 데이터 동기화
-    // userGold = playerData.userGold;
-    // base.hp = playerData.baseHp;
-    // score = playerData.score;
-    // monsters = playerData.monsters;
-    // towers = playerData.towers;
-
-    // // 상대방 데이터 동기화
-    // opponentBase.hp = opponentData.baseHp;
-    // opponentMonsters = opponentData.monsters;
-    // opponentTowers = opponentData.towers;
-    placeNewOpponentTower(data);
+  serverSocket.on('gameSync', (packet) => {
+    placeNewOpponentTower(packet.data.opponentTowers);
   });
 });
 
