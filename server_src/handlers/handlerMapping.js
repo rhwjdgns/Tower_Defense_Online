@@ -7,6 +7,12 @@ import { PacketType } from '../constants.js';
 import { handleRegister, handleLogin } from './registerHandler.js';
 import { handleGameEnd, handleGameSync, sendGameOver } from './gameHandler.js';
 import { handleMatchRequest } from './matchMakingHandler.js';
+import {
+  handleDieMonster,
+  handleEnemyDieMonster,
+  handleEnemySpawnMonster,
+  handleSpawnMonster,
+} from './monster.handler.js';
 
 const handlerMapping = {
   [PacketType.C2S_REGISTER_REQUEST]: handleRegister,

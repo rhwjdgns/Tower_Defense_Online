@@ -334,11 +334,12 @@ buyTowerButton.style.cursor = 'pointer';
 buyTowerButton.style.display = 'none';
 buyTowerButton.addEventListener('click', placeNewTower);
 document.body.appendChild(buyTowerButton);
-function sendGameEnd() {
-  const packet = {
-    packetType: 3, //PacketType.C2S_GAME_END_REQUEST,
-    userId: localStorage.getItem('userId'),
-    finalScore: score,
-  };
-  serverSocket.emit('gameEnd', packet);
+
+function sendEvent(handlerId, payload) {
+  serverSocket.emit('event', {
+    userId,
+    clientVersion: CLIENT_VERSION,
+    handlerId,
+    payload,
+  });
 }

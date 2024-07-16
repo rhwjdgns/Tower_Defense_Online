@@ -30,4 +30,6 @@ export const removeMonster = (uuid, monsterId) => {
   return { status: 'success', message: 'Monster removed' };
 };
 
-// 좌표 추가하기
+export const monsterSpawnPoint = (uuid) => {
+  return (monsters[uuid] = { x, y });
+};
