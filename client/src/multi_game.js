@@ -109,12 +109,12 @@ function drawRotatedImage(image, x, y, width, height, angle, context) {
   context.drawImage(image, -width / 2, -height / 2, width, height);
   context.restore();
 }
-function getRandomPositionNearPath(path, maxDistance) {
-  const segmentIndex = Math.floor(Math.random() * (path.length - 1));
-  const startX = path[segmentIndex].x;
-  const startY = path[segmentIndex].y;
-  const endX = path[segmentIndex + 1].x;
-  const endY = path[segmentIndex + 1].y;
+function getRandomPositionNearPath(maxDistance) {
+  const segmentIndex = Math.floor(Math.random() * (monsterPath.length - 1));
+  const startX = monsterPath[segmentIndex].x;
+  const startY = monsterPath[segmentIndex].y;
+  const endX = monsterPath[segmentIndex + 1].x;
+  const endY = monsterPath[segmentIndex + 1].y;
   const t = Math.random();
   const posX = startX + t * (endX - startX);
   const posY = startY + t * (endY - startY);
