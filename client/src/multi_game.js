@@ -178,8 +178,9 @@ function gameLoop() {
         attackedSound.volume = 0.3;
         attackedSound.play();
         monsters.splice(i, 1);
-        baseHp -= monster.takeDamage();
-        base.takeDamage(monster.takeDamage());
+
+        baseHp -= monster.Damage();
+        base.takeDamage(monster.Damage());
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
@@ -203,6 +204,7 @@ function initGame(payload) {
   if (isInitGame) {
     return;
   }
+  console.log(payload);
   userGold = payload.userGold;
   baseHp = payload.baseHp;
   monsterPath = payload.monsterPath;
