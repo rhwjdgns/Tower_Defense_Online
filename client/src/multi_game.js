@@ -139,7 +139,6 @@ function placeNewOpponentTower(value) {
     const tower = new Tower(element.tower.X, element.tower.Y);
     opponentTowers.push(tower);
   });
-  console.log(opponentTowers);
 }
 function placeBase(position, isPlayer) {
   if (isPlayer) {
@@ -175,7 +174,10 @@ function gameLoop() {
         Math.pow(tower.x - monster.x, 2) + Math.pow(tower.y - monster.y, 2),
       );
       if (distance < tower.range) {
-        tower.attack(monster);
+        const Attacked = tower.attack(monster);
+        if (Attacked) {
+          sendEvent(6, { damage: tower.getAttackPower(), hp: monster.hp });
+        }
       }
     });
   });
@@ -254,7 +256,7 @@ Promise.all([
     }
   });
 
-  //대결 신청 
+  //대결 신청
   serverSocket.on('connect', () => {
     serverSocket.emit('event', {
       packetType: 13, // C2S_MATCH_REQUEST
@@ -264,7 +266,6 @@ Promise.all([
   });
   serverSocket.on('event', (data, payload) => {
     console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
-
 
     if (data.packetType === 14) {
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
@@ -309,17 +310,8 @@ Promise.all([
       });
     }
   });
-  serverSocket.on('gameSync', (data) => {
-    // const { playerData, opponentData } = data;
-    // userGold = playerData.userGold;
-    // base.hp = playerData.baseHp;
-    // score = playerData.score;
-    // monsters = playerData.monsters;
-    // towers = playerData.towers;
-    // opponentBase.hp = opponentData.baseHp;
-    // opponentMonsters = opponentData.monsters;
-    // opponentTowers = opponentData.towers;
-    placeNewOpponentTower(data);
+  serverSocket.on('gameSync', (packet) => {
+    placeNewOpponentTower(packet.data.opponentTowers);
   });
 });
 const buyTowerButton = document.createElement('button');

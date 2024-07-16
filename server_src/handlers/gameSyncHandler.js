@@ -1,41 +1,32 @@
 import { PacketType } from '../constants.js';
+import { getPlayData } from '../models/playData.model.js';
+import { getTowers } from '../models/tower.model.js';
+import { CLIENTS } from './matchMakingHandler.js';
 
 // 상태 동기화 패킷 생성 및 전송
-function sendGameSync(socket, towers, opponentSocket, opponentTowers) {
-  // const packet = {
-  //   packetType: PacketType.S2C_GAMESYNC,
-  //   playerData: {
-  //     userGold: game.player1.gold,
-  //     baseHp: game.player1.baseHp,
-  //     score: game.player1.score,
-  //     monsters: game.player1.monsters.map(monster => ({
-  //       x: monster.x,
-  //       y: monster.y,
-  //       hp: monster.hp,
-  //       monsterNumber: monster.monsterNumber
-  //     })),
-  //     towers: game.player1.towers.map(tower => ({
-  //       x: tower.x,
-  //       y: tower.y
-  //     }))
-  //   },
-  //   opponentData: {
-  //     baseHp: game.player2.baseHp,
-  //     monsters: game.player2.monsters.map(monster => ({
-  //       x: monster.x,
-  //       y: monster.y,
-  //       hp: monster.hp,
-  //       monsterNumber: monster.monsterNumber
-  //     })),
-  //     towers: game.player2.towers.map(tower => ({
-  //       x: tower.x,
-  //       y: tower.y
-  //     }))
-  //   }
-  // };
+function sendGameSync(socket, userId) {
+  const opponentPlayerId = getPlayData(userId).getOpponentInfo();
+  const opponentClient = CLIENTS[opponentPlayerId];
 
-  socket.emit('gameSync', towers);
-  opponentSocket.emit('gameSync', opponentTowers);
+  const mainTowers = getTowers(userId);
+  const opponentTowers = getTowers(opponentPlayerId);
+
+  const playerPacket = {
+    packetType: PacketType.S2C_GAMESYNC,
+    data: {
+      opponentTowers
+    }
+  }
+
+  const opponentPacket = {
+    packetType: PacketType.S2C_GAMESYNC,
+    data: {
+      opponentTowers: mainTowers
+    }
+  }
+
+  socket.emit('gameSync', playerPacket);
+  opponentClient.emit('gameSync', opponentPacket);
 }
 
 export { sendGameSync };
