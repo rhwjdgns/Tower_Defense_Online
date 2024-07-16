@@ -1,6 +1,7 @@
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
+
 if (!localStorage.getItem('token')) {
   alert('로그인이 필요합니다.');
   location.href = '/login';
@@ -139,7 +140,17 @@ function placeNewTower() {
   const { x, y } = getRandomPositionNearPath(200);
   const tower = new Tower(x, y);
   towers.push(tower);
+  sendEvent(5, { x, y, level: 1 });
+
   tower.draw(ctx, towerImage);
+}
+function placeNewOpponentTower(value) {
+  opponentTowers = [];
+  value.forEach((element) => {
+    const tower = new Tower(element.tower.X, element.tower.Y);
+    opponentTowers.push(tower);
+  });
+  console.log(opponentTowers);
 }
 function placeBase(position, isPlayer) {
   if (isPlayer) {
@@ -255,6 +266,8 @@ Promise.all([
       location.href = '/login';
     }
   });
+
+  //대결 신청
   serverSocket.on('connect', () => {
     serverSocket.emit('event', {
       packetType: 13, // C2S_MATCH_REQUEST
@@ -264,6 +277,7 @@ Promise.all([
   });
   serverSocket.on('event', (data, payload) => {
     console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
+
     if (data.packetType === 14) {
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
       let progressValue = 0;
@@ -306,17 +320,16 @@ Promise.all([
     }
   });
   serverSocket.on('gameSync', (data) => {
-    const { playerData, opponentData } = data;
-    userGold = playerData.userGold;
-    base.hp = playerData.baseHp;
-    score = playerData.score;
-    monsters = playerData.monsters.map((m) => new Monster(m.path, monsterImages, m.level));
-    towers = playerData.towers.map((t) => new Tower(t.x, t.y));
-    opponentBase.hp = opponentData.baseHp;
-    opponentMonsters = opponentData.monsters.map(
-      (m) => new Monster(m.path, monsterImages, m.level),
-    );
-    opponentTowers = opponentData.towers.map((t) => new Tower(t.x, t.y));
+    // const { playerData, opponentData } = data;
+    // userGold = playerData.userGold;
+    // base.hp = playerData.baseHp;
+    // score = playerData.score;
+    // monsters = playerData.monsters;
+    // towers = playerData.towers;
+    // opponentBase.hp = opponentData.baseHp;
+    // opponentMonsters = opponentData.monsters;
+    // opponentTowers = opponentData.towers;
+    placeNewOpponentTower(data);
   });
 });
 const buyTowerButton = document.createElement('button');

@@ -1,6 +1,7 @@
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
+
 if (!localStorage.getItem('token2')) {
   alert('로그인이 필요합니다.');
   location.href = '/login';
@@ -48,8 +49,8 @@ let opponentBase; // 상대방 기지 객체
 let opponentMonsterPath; // 상대방 몬스터 경로
 let opponentInitialTowerCoords; // 상대방 초기 타워 좌표
 let opponentBasePosition; // 상대방 기지 좌표
-const opponentMonsters = []; // 상대방 몬스터 목록
-const opponentTowers = []; // 상대방 타워 목록
+let opponentMonsters = []; // 상대방 몬스터 목록
+let opponentTowers = []; // 상대방 타워 목록
 
 let isInitGame = false;
 
@@ -163,7 +164,17 @@ function placeNewTower() {
   const { x, y } = getRandomPositionNearPath(200);
   const tower = new Tower(x, y);
   towers.push(tower);
+
+  sendEvent(5, { x, y, level: 1 });
   tower.draw(ctx, towerImage);
+}
+function placeNewOpponentTower(value) {
+  opponentTowers = [];
+  value.forEach((element) => {
+    const tower = new Tower(element.tower.X, element.tower.Y);
+    opponentTowers.push(tower);
+  });
+  console.log(opponentTowers);
 }
 
 function placeBase(position, isPlayer) {
@@ -312,6 +323,7 @@ Promise.all([
   });
 
   serverSocket.on('event', (data, payload) => {
+    console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
     if (data.packetType === 14) {
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
     }
@@ -361,17 +373,20 @@ Promise.all([
 
   // 상태 동기화 이벤트 수신
   serverSocket.on('gameSync', (data) => {
-    const { playerData, opponentData } = data;
-    userGold = playerData.userGold;
-    base.hp = playerData.baseHp;
-    score = playerData.score;
-    monsters = playerData.monsters.map((m) => new Monster(m.path, monsterImages, m.level));
-    towers = playerData.towers.map((t) => new Tower(t.x, t.y));
-    opponentBase.hp = opponentData.baseHp;
-    opponentMonsters = opponentData.monsters.map(
-      (m) => new Monster(m.path, monsterImages, m.level),
-    );
-    opponentTowers = opponentData.towers.map((t) => new Tower(t.x, t.y));
+    // const { playerData, opponentData } = data;
+
+    // // 유저 데이터 동기화
+    // userGold = playerData.userGold;
+    // base.hp = playerData.baseHp;
+    // score = playerData.score;
+    // monsters = playerData.monsters;
+    // towers = playerData.towers;
+
+    // // 상대방 데이터 동기화
+    // opponentBase.hp = opponentData.baseHp;
+    // opponentMonsters = opponentData.monsters;
+    // opponentTowers = opponentData.towers;
+    placeNewOpponentTower(data);
   });
 });
 
