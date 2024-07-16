@@ -39,6 +39,7 @@ let monsterLevel = 0; // 몬스터 레벨
 let monsterPath; // 몬스터 경로
 let initialTowerCoords; // 초기 타워 좌표
 let basePosition; // 기지 좌표
+let monsterIndex = [];
 const monsters = []; // 유저 몬스터 목록
 const towers = []; // 유저 타워 목록
 let score = 0; // 게임 점수
@@ -183,9 +184,17 @@ function placeBase(position, isPlayer) {
 function spawnMonster() {
   const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(newMonster);
+  sendEvent(9, monsterIndex, Monster.hp);
 
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
+// function spawnOpponentMonster(value) {
+//   opponentMonsters = [];
+//   value.forEach((element) => {
+//     const monster = new Monster(element.monster.monsterIndex, Monster.hp);
+//     opponentMonsters.push(monster);
+//   });
+// }
 
 function gameLoop() {
   // 렌더링 시에는 항상 배경 이미지부터 그려야 합니다! 그래야 다른 이미지들이 배경 이미지 위에 그려져요!

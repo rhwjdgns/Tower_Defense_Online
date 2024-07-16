@@ -33,6 +33,7 @@ let monsterLevel = 0;
 let monsterPath;
 let initialTowerCoords;
 let basePosition;
+let monsterIndex = [];
 let monsters = [];
 let towers = [];
 let score = 0;
@@ -151,10 +152,18 @@ function placeBase(position, isPlayer) {
   }
 }
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
-  monsters.push(newMonster);
+  const monster = new Monster(monsterPath, monsterImages, monsterLevel);
+  monsters.push(monster);
+  sendEvent(9, monsterIndex, Monster.hp);
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
+// function spawnOpponentMonster(value) {
+//   opponentMonsters = [];
+//   value.forEach((element) => {
+//     const monster = new Monster(element.monster.monsterIndex, Monster.hp);
+//     opponentMonsters.push(monster);
+//   });
+// }
 function gameLoop() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
   drawPath(monsterPath, ctx);
@@ -254,7 +263,7 @@ Promise.all([
     }
   });
 
-  //대결 신청 
+  //대결 신청
   serverSocket.on('connect', () => {
     serverSocket.emit('event', {
       packetType: 13, // C2S_MATCH_REQUEST
@@ -264,7 +273,6 @@ Promise.all([
   });
   serverSocket.on('event', (data, payload) => {
     console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
-
 
     if (data.packetType === 14) {
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
