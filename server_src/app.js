@@ -9,7 +9,6 @@ import { prisma } from './utils/prisma/index.js';
 import initSocket from './init/socket.js';
 import cors from 'cors';
 
-
 // __dirname을 ES 모듈에서 사용하기 위한 설정
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +20,7 @@ const PORT = 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 //현재 접속한 유저들의 세션 담기
-const activeSessions = {};
+export const activeSessions = {};
 
 
 // 특정 도메인만 허용하는 CORS 설정
@@ -122,5 +121,8 @@ app.post('/api/login', async (req, res) => {
 initSocket(server);
 
 server.listen(PORT, async () => {
-  console.log(`Server is running on port ${PORT}`);
+  const address = server.address();
+  const host = address.address === '::' ? 'localhost' : address.address; // IPv6의 ::는 localhost를 의미함
+  const port = address.port;
+  console.log(`Server가 http://${host}:${port} 에서 열렸습니다`);
 });

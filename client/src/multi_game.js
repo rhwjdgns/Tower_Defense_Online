@@ -24,7 +24,7 @@ const NUM_OF_MONSTERS = 5;
 const CLIENT_VERSION = '1.0.0';
 // 게임 데이터
 let towerCost = 0;
-let monsterSpawnInterval = 1000;
+let monsterSpawnInterval = 3000;
 // 유저 데이터
 let userGold = 0;
 let base;
@@ -60,6 +60,13 @@ for (let i = 1; i <= NUM_OF_MONSTERS; i++) {
   img.src = `images/monster${i}.png`;
   monsterImages.push(img);
 }
+monsterPath = monsterPath || [];
+initialTowerCoords = initialTowerCoords || [];
+basePosition = basePosition || { x: 0, y: 0 };
+
+opponentMonsterPath = opponentMonsterPath || [];
+opponentInitialTowerCoords = opponentInitialTowerCoords || [];
+opponentBasePosition = opponentBasePosition || { x: 0, y: 0 };
 let bgm;
 function initMap() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
@@ -71,6 +78,10 @@ function initMap() {
   placeBase(opponentBasePosition, false);
 }
 function drawPath(path, context) {
+  if (!path || path.length === 0) {
+    console.error('Path is not defined or empty');
+    return;
+  }
   const segmentLength = 10;
   const imageWidth = 30;
   const imageHeight = 30;
@@ -139,7 +150,6 @@ function placeNewOpponentTower(value) {
     const tower = new Tower(element.tower.X, element.tower.Y);
     opponentTowers.push(tower);
   });
-  console.log(opponentTowers);
 }
 function placeBase(position, isPlayer) {
   if (isPlayer) {
@@ -151,9 +161,15 @@ function placeBase(position, isPlayer) {
   }
 }
 function spawnMonster() {
-  const newMonster = new Monster(monsterPath, monsterImages, monsterLevel);
-  monsters.push(newMonster);
+  const monster = new Monster(monsterPath, monsterImages, monsterLevel);
+  monsters.push(monster);
+  sendEvent(9, { hp: monster.getMaxHp() });
   // TODO. 서버로 몬스터 생성 이벤트 전송
+}
+function spawnOpponentMonster(value) {
+  const newMonster = new Monster(opponentMonsterPath, monsterImages, 0);
+  newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
+  opponentMonsters.push(newMonster);
 }
 function gameLoop() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
@@ -175,7 +191,10 @@ function gameLoop() {
         Math.pow(tower.x - monster.x, 2) + Math.pow(tower.y - monster.y, 2),
       );
       if (distance < tower.range) {
-        tower.attack(monster);
+        const Attacked = tower.attack(monster);
+        if (Attacked) {
+          sendEvent(6, { damage: tower.getAttackPower(), hp: monster.hp });
+        }
       }
     });
   });
@@ -196,6 +215,7 @@ function gameLoop() {
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
+      sendEvent(10);
       monsters.splice(i, 1);
     }
   }
@@ -260,7 +280,8 @@ Promise.all([
     }
   });
 
-  //대결 신청 
+  //대결 신청
+  //대결 신청
   serverSocket.on('connect', () => {
     serverSocket.emit('event', {
       packetType: 13, // C2S_MATCH_REQUEST
@@ -270,7 +291,6 @@ Promise.all([
   });
   serverSocket.on('event', (data, payload) => {
     console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
-
 
     if (data.packetType === 14) {
       progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
@@ -294,6 +314,8 @@ Promise.all([
       }, 300);
     }
   });
+
+
   serverSocket.on('gameOver', (data) => {
     bgm.pause();
     const { isWin } = data;
@@ -313,17 +335,13 @@ Promise.all([
       });
     }
   });
-  serverSocket.on('gameSync', (data) => {
-    // const { playerData, opponentData } = data;
-    // userGold = playerData.userGold;
-    // base.hp = playerData.baseHp;
-    // score = playerData.score;
-    // monsters = playerData.monsters;
-    // towers = playerData.towers;
-    // opponentBase.hp = opponentData.baseHp;
-    // opponentMonsters = opponentData.monsters;
-    // opponentTowers = opponentData.towers;
-    placeNewOpponentTower(data);
+  serverSocket.on('gameSync', (packet) => {
+    placeNewOpponentTower(packet.data.opponentTowers);
+    if (packet.data.opponentMonsters !== undefined && packet.data.spawnStart !== undefined) {
+      if (packet.data.spawnStart) {
+        spawnOpponentMonster(packet.data.opponentMonsters);
+      }
+    }
   });
 });
 const buyTowerButton = document.createElement('button');

@@ -51,20 +51,19 @@
 // //* 로그인 API *//
 // router.post('/login', async (req, res, next) => {
 //     const { userId, password } = req.body;
-  
+
 //     try {
 //       const user = await prisma.user.findUnique({ where: { userId } });
 
 //       if (!user){
 //         return res.status(401).json({message:"존재하지 않는 아이디입니다."});
 //       }
-  
+
 //       if (!bcrypt.compare(password, user.userPw)) {
 //         return res.status(401).json({ message: '비밀번호가 잘못되었습니다.' });
 //       }
 
-  
-//       const token = jwt.sign({ userId: user.userId }, process.env.TOKEN_SECRET_KEY, 
+//       const token = jwt.sign({ userId: user.userId }, process.env.TOKEN_SECRET_KEY,
 //         {expiresIn: '1h'}
 //         );
 //       res.header("authorization",`Bearer ${token}`)

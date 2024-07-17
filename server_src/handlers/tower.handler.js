@@ -1,60 +1,11 @@
-import { getPlayData } from '../models/playData.model.js';
 import { getTowers, removeTower, setTower } from '../models/tower.model.js';
 import { sendGameSync } from './gameSyncHandler.js';
-import { CLIENTS } from './matchMakingHandler.js';
-
-// 클라이언트 타워 vs 서버 타워 비교 함수
-function compareTowers(currentTowers, gameTowers) {
-  //길이가 다르면 차이가 있음
-
-  if (currentTowers.length !== gameTowers.length) {
-    return true;
-  }
-
-  // currentTower와 gameTower의 각 요소를 순회하며 비교
-  for (let i = 0; i < currentTowers.length; i++) {
-    const currentTower = currentTowers[i];
-    const gameTowerPosition = gameTowers[i];
-
-    //좌표를 비교
-    if (
-      currentTower.tower.X !== gameTowerPosition.x ||
-      currentTower.tower.Y !== gameTowerPosition.y
-    ) {
-      return true; //차이가 있음
-    }
-  }
-
-  return false; //차이가 없음
-}
 
 //서버에 타워를 추가한다
 export const towerAddOnHandler = (socket, userId, payload) => {
-  // 유저의 현재 타워 정보
-  let currentTowers = getTowers(userId);
-
-  // 클라이언트의 타워 정보
-  //const gameTowers = payload.gameTowers;
-
-  // 클라이언트 타워 vs 서버 타워 비교
-  // const hasDifference = compareTowers(currentTowers, gameTowers);
-  // if (hasDifference) {
-  //   return {
-  //     status: 'fail',
-  //     message: 'There are differences between the client and server tower information',
-  //   };
-  // }
-
   setTower(userId, payload.x, payload.y, payload.level);
 
-  const opponentPlayerId = getPlayData(userId).getOpponentInfo();
-
-  const opponentClient = CLIENTS[opponentPlayerId];
-
-  const mainTowers = getTowers(userId);
-  const opponentTowers = getTowers(opponentPlayerId)
-
-  sendGameSync(socket, opponentTowers, opponentClient, mainTowers);
+  sendGameSync(socket, userId, false);
 
   return {
     status: 'success',
@@ -96,15 +47,11 @@ export const towerRemoveHandler = (userId, payload) => {
   return { status: 'success', message: 'Tower removed successfully' };
 };
 
-export const towerAttackHandler = (userId, payload) => {
-  const towers = getTowers(userId);
-  const index = towers.findIndex(
-    (element) => element.tower.X === payload.X && element.tower.Y === payload.Y,
-  );
+export const towerAttackHandler = (socket, userId, payload) => {
+  payload.hp -= payload.damage;
 
-  if (index === -1) {
-    return { status: 'fail', message: 'Tower not found' };
-  }
+  sendGameSync(socket, userId, false);
 
+  //console.log(`타워 공격 성공!!! : ${payload.hp}`);
   //몬스터 인덱스로 맞춘 몬스터 찾기
 };
