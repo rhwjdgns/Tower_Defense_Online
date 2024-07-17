@@ -26,7 +26,7 @@ const loader = document.getElementsByClassName('loader')[0];
 const NUM_OF_MONSTERS = 5;
 
 // 게임 데이터
-let towerCost = 0;
+let towerCost = 500;
 let monsterSpawnInterval = 3000;
 let towerIndex = 1;
 let monsterIndex = 1;
@@ -154,7 +154,7 @@ function placeNewTower() {
   tower.setTowerIndex(towerIndex);
   towers.push(tower);
 
-  sendEvent(PacketType.C2S_TOWER_BUY, { x, y, level: 1, towerIndex });
+  sendEvent(PacketType.C2S_TOWER_BUY, { x, y, level: 1, towerIndex, towerCost });
   towerIndex++;
   tower.draw(ctx, towerImage);
 }
@@ -275,7 +275,7 @@ function gameLoop() {
         attackedSound.volume = 0.3;
         attackedSound.play();
         monsters.splice(i, 1);
-        sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex() });
+        sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex(), score });
         
         //baseHp -= monster.Damage();
         //base.takeDamage(monster.Damage());
@@ -297,7 +297,7 @@ function gameLoop() {
       }
     } else {
       monsters.splice(i, 1);
-      sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex() });
+      sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex(), score });
     }
   }
 

@@ -1,5 +1,6 @@
 import { PacketType } from '../constants.js';
 import { getMonsters, setMonster, removeMonster } from '../models/monster.model.js';
+import { getPlayData } from '../models/playData.model.js';
 import { sendGameSync } from './gameSyncHandler.js';
 
 // 아군 몬스터 사망
@@ -8,6 +9,9 @@ function handleDieMonster(socket, userId, payload) {
   if (!monsters) {
     return { status: 'fail', message: 'Monsters not found' };
   }
+
+  const playerData = getPlayData(userId);
+  playerData.addScore(100);
 
   removeMonster(userId, payload.monsterIndex);
   sendGameSync(socket, userId, PacketType.S2C_ENEMY_DIE_MONSTER, {
