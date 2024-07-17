@@ -256,7 +256,7 @@ function gameLoop() {
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
-      //sendEvent(PacketType.C2S_DIE_MONSTER);
+      sendEvent(PacketType.C2S_DIE_MONSTER);
       monsters.splice(i, 1);
     }
   }

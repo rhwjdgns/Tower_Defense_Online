@@ -4,6 +4,7 @@ import { sendGameSync } from './gameSyncHandler.js';
 
 // 아군 몬스터 사망
 function handleDieMonster(userId, payload) {
+  return;
   const monsters = getMonsters(userId);
   if (!monsters) {
     return { status: 'fail', message: 'Monsters not found' };
@@ -38,16 +39,4 @@ function handleSpawnMonster(socket, userId, payload) {
   return { status: 'success', message: 'Monster created' };
 }
 
-// 적군 몬스터 생성
-function handleEnemySpawnMonster(userId, payload) {
-  const monsters = getMonsters(userId);
-  if (!monsters) {
-    return { status: 'fail', message: 'Monsters not found' };
-  }
-
-  setMonster(userId, payload.monsterId, payload.monsterIndex);
-  console.log('적군 몬스터 생성', JSON.stringify(monsters));
-  return { status: 'success', message: 'Monster created' };
-}
-
-export { handleDieMonster, handleEnemyDieMonster, handleSpawnMonster, handleEnemySpawnMonster };
+export { handleDieMonster, handleEnemyDieMonster, handleSpawnMonster };
