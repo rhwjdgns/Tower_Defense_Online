@@ -11,7 +11,7 @@ function handleDieMonster(socket, userId, payload) {
   }
 
   const playerData = getPlayData(userId);
-  playerData.addScore(100);
+  playerData.addScore(100 + (payload.monsterLevel * 50));
 
   removeMonster(userId, payload.monsterIndex);
   sendGameSync(socket, userId, PacketType.S2C_ENEMY_DIE_MONSTER, {

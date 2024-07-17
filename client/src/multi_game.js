@@ -284,7 +284,11 @@ function gameLoop() {
         attackedSound.volume = 0.3;
         attackedSound.play();
         monsters.splice(i, 1);
-        sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex(), score });
+        sendEvent(PacketType.C2S_DIE_MONSTER, {
+          monsterIndex: monster.getMonsterIndex(),
+          score,
+          monsterLevel: monster.level,
+        });
         sendEvent(PacketType.C2S_MONSTER_ATTACK_BASE, { damage: monster.Damage() });
 
         // baseHp가 0이 되면 게임 오버
@@ -295,7 +299,11 @@ function gameLoop() {
       }
     } else {
       monsters.splice(i, 1);
-      sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex(), score });
+      sendEvent(PacketType.C2S_DIE_MONSTER, {
+        monsterIndex: monster.getMonsterIndex(),
+        score,
+        monsterLevel: monster.level,
+      });
       killCount++;
 
       if (killCount === 10 && monsterSpawnInterval > 1000) {
