@@ -217,6 +217,11 @@ function destroyOpponentMonster(index) {
 }
 function gameSync(data) {
   //예외 처리 부분
+  score = data.score;
+  userGold = data.gold;
+  baseHp = data.baseHp;
+  base.updateHp(baseHp);
+
   if (data.attackedMonster === undefined) {
     return;
   }
@@ -276,16 +281,17 @@ function gameLoop() {
         monsters.splice(i, 1);
         sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex() });
 
-        baseHp -= monster.Damage();
-        base.takeDamage(monster.Damage());
-        console.log(`Monster attacked base: Damage: ${monster.Damage()}, New Base HP: ${base.hp}`);
+        //baseHp -= monster.Damage();
+        //base.takeDamage(monster.Damage());
+        //console.log(`Monster attacked base: Damage: ${monster.Damage()}, New Base HP: ${base.hp}`);
 
         // 서버로 몬스터가 기지를 공격한 이벤트 전송
-        serverSocket.emit('event', {
-          packetType: 14,
-          userId: userId,
-          payload: { damage: monster.Damage() },
-        });
+        sendEvent(PacketType.C2S_MONSTER_ATTACK_BASE, {damage: monster.Damage()});
+        // serverSocket.emit('event', {
+        //   packetType: 14,
+        //   userId: userId,
+        //   payload: { damage: monster.Damage() },
+        // });
 
         // baseHp가 0이 되면 게임 오버
         if (baseHp <= 0) {

@@ -1,5 +1,6 @@
 import { sendGameSync } from './gameSyncHandler.js';
 import { PacketType } from '../constants.js';
+import { getPlayData } from '../models/playData.model.js';
 
 let io;
 const bases = {}; // 각 플레이어의 베이스 정보를 저장
@@ -82,34 +83,27 @@ function handleBaseHpUpdate(socket, data) {
 }
 
 // 몬스터 공격 처리
-function handleMonsterAttack(playerId, damage) {
-  if (bases[playerId]) {
-    bases[playerId].hp -= damage;
-    if (bases[playerId].hp < 0) {
-      bases[playerId].hp = 0;
-    }
-    io.emit('updateBaseHp', { playerId: playerId, hp: bases[playerId].hp });
-    console.log(`Base attacked: Player ID: ${playerId}, Damage: ${damage}, New HP: ${bases[playerId].hp}`);
+function handleMonsterBaseAttack(socket, userId, payload) {
+  const playerData = getPlayData(userId);
 
-    // 추가: 상대 클라이언트에게 base HP 업데이트 이벤트 브로드캐스트
-    io.emit('event', {
-      packetType: PacketType.S2C_UPDATE_BASE_HP,
-      userId: playerId,
-      baseHp: bases[playerId].hp,
-    });
-  }
-}
+  playerData.setBaseHp(playerData.getBaseHp() - payload.damage);
+  sendGameSync(socket, userId, PacketType.S2C_UPDATE_BASE_HP, {playerBaseHp: playerData.getBaseHp()});
+  // if (bases[playerId]) {
+  //   bases[playerId].hp -= damage;
+  //   if (bases[playerId].hp < 0) {
+  //     bases[playerId].hp = 0;
+  //   }
 
-// 상태 동기화 호출
-function handleGameSync(socket, data) {
-  const game = data.game; // data에서 game 객체를 가져옵니다.
-  sendGameSync(game);
-  // 게임 오버 로직 예시
-  if (game.player1.baseHp <= 0) {
-    sendGameOver(game, game.player2); // player2 승리
-  } else if (game.player2.baseHp <= 0) {
-    sendGameOver(game, game.player1); // player1 승리
-  }
+  //   io.emit('updateBaseHp', { playerId: playerId, hp: bases[playerId].hp });
+  //   console.log(`Base attacked: Player ID: ${playerId}, Damage: ${damage}, New HP: ${bases[playerId].hp}`);
+
+  //   // 추가: 상대 클라이언트에게 base HP 업데이트 이벤트 브로드캐스트
+  //   io.emit('event', {
+  //     packetType: PacketType.S2C_UPDATE_BASE_HP,
+  //     userId: playerId,
+  //     baseHp: bases[playerId].hp,
+  //   });
+  // }
 }
 
 function initialize(ioInstance) {
@@ -120,4 +114,4 @@ function initialize(ioInstance) {
   });
 }
 
-export { handleGameEnd, handleGameSync, sendGameOver, handleMonsterAttack, initialize, initializeBase, startGame, handleBaseHpUpdate };
+export { handleGameEnd, sendGameOver, handleMonsterBaseAttack, initialize, initializeBase, startGame, handleBaseHpUpdate };
