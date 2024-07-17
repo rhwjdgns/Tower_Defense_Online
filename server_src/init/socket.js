@@ -6,10 +6,15 @@ import {
   handleDieMonster,
   handleSpawnMonster,
 } from '../handlers/monster.handler.js';
+//import { , , initialize, } from '../handlers/gameHandler.js';
 import { PacketType } from '../constants.js';
+import { handleMonsterBaseAttack } from '../handlers/gameHandler.js';
 
 const initSocket = (server) => {
   const io = new SocketIO(server);
+
+  //initialize(io); //io 객체 초기화
+
   io.on('connection', (socket) => {
     console.log(`New user connected: ${socket.id}`);
 
@@ -34,6 +39,12 @@ const initSocket = (server) => {
         case PacketType.C2S_DIE_MONSTER:
           handleDieMonster(socket, packet.userId, packet.payload);
           break;
+        case PacketType.C2S_MONSTER_ATTACK_BASE:
+          handleMonsterBaseAttack(socket, packet.userId, packet.payload);
+          break;
+        // case 16: // S2C_UPDATE_BASE_HP
+        //   handleBaseHpUpdate(socket, packet.payload);
+        //   break;
         // 다른 이벤트 핸들러 추가
         default:
           console.log(`Unknown packet type: ${packet.packetType}`);

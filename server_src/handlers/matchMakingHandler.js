@@ -80,6 +80,7 @@ function handleMatchRequest(socket, data) {
 
 
     //게임초기값 (monster path, initial towers, game data)
+    const initialHp = 100; // 초기 base HP 값
     const player1MonsterPath = generateRandomMonsterPath();
     const player2MonsterPath = generateRandomMonsterPath();
     let player1InitialTowerCoords = [];
@@ -121,8 +122,16 @@ function handleMatchRequest(socket, data) {
       ),
     );
 
-    const player1Payload = getPlayData(player1.userId);
-    const player2Payload = getPlayData(player2.userId);
+    const player1Payload = {
+      ...getPlayData(player1.userId),
+      baseHp: initialHp,
+      opponentBaseHp: initialHp
+    };
+    const player2Payload = {
+      ...getPlayData(player2.userId),
+      baseHp: initialHp,
+      opponentBaseHp: initialHp
+    };
     
     //대기 시작 & 게임 초기 값 packet & socket 전송
     player1.socket.emit('event', packet, player1Payload);
