@@ -8,12 +8,12 @@ export const getMonsters = (uuid) => {
   return monsters[uuid];
 };
 
-export const setMonster = (uuid, hp, monsterIndex) => {
+export const setMonster = (uuid, hp, monsterIndex, monsterLevel) => {
   if (monsters[uuid] === undefined) {
     createMonsters(uuid);
   }
 
-  monsters[uuid].push({ monsterIndex, hp });
+  monsters[uuid].push({ monsterIndex, hp, monsterLevel });
   return monsterIndex;
 };
 

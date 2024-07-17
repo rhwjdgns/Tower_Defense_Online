@@ -11,7 +11,7 @@ function handleDieMonster(socket, userId, payload) {
   }
 
   const playerData = getPlayData(userId);
-  playerData.addScore(100);
+  playerData.addScore(100 + (payload.monsterLevel * 50));
 
   removeMonster(userId, payload.monsterIndex);
   sendGameSync(socket, userId, PacketType.S2C_ENEMY_DIE_MONSTER, {
@@ -22,7 +22,7 @@ function handleDieMonster(socket, userId, payload) {
 
 // 아군 몬스터 생성
 function handleSpawnMonster(socket, userId, payload) {
-  const monsterIndex = setMonster(userId, payload.hp, payload.monsterIndex);
+  const monsterIndex = setMonster(userId, payload.hp, payload.monsterIndex, payload.monsterLevel);
   const mainMonsters = getMonsters(userId);
 
   sendGameSync(socket, userId, PacketType.S2C_ENEMY_SPAWN_MONSTER, { mainMonsters });
