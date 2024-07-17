@@ -12,10 +12,19 @@ export const setMonster = (uuid, hp, monsterIndex) => {
   if (monsters[uuid] === undefined) {
     createMonsters(uuid);
   }
-  
-  console.log(monsterIndex);
+
   monsters[uuid].push({ monsterIndex, hp });
   return monsterIndex;
+};
+
+export const setDamagedMonsterHp = (uuid, damage, monsterIndex) => {
+  const attackedMonster = monsters[uuid].find((monster) => {
+    return monster.monsterIndex === monsterIndex;
+  });
+
+  attackedMonster.hp -= damage;
+
+  return attackedMonster.hp;
 };
 
 export const clearMonsters = (uuid) => {

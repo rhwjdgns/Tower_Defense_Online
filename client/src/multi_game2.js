@@ -187,17 +187,6 @@ function placeNewOpponentTower(value) {
 }
 
 function opponentTowerAttack(monsterValue, towerValue) {
-  console.log(
-    `monsterValue : ${JSON.stringify(monsterValue)}   towerValue : ${JSON.stringify(towerValue)}`,
-  );
-
-  opponentTowers.forEach((element) => {
-    console.log('적 타워 : ' + element.getTowerIndex());
-  });
-
-  opponentMonsters.forEach((element) => {
-    console.log('적 몬스터 : ' + element.getMonsterIndex());
-  });
   const attackedTower = opponentTowers.find((tower) => {
     return tower.getTowerIndex() === towerValue.towerIndex;
   });
@@ -230,6 +219,29 @@ function spawnOpponentMonster(value) {
   const newMonster = new Monster(opponentMonsterPath, monsterImages, 0);
   newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
   opponentMonsters.push(newMonster);
+}
+
+function destroyOpponentMonster(index) {
+  const destroyedMonsterIndex = opponentMonsters.findIndex((monster) => {
+    return monster.getMonsterIndex() === index;
+  });
+
+  opponentMonsters.splice(destroyedMonsterIndex, 1);
+}
+function gameSync(data) {
+  //예외 처리 부분
+  if (data.attackedMonster === undefined) {
+    return;
+  }
+
+  const attackedMonster = monsters.find((monster) => {
+    return monster.getMonsterIndex() === data.attackedMonster.monsterIndex;
+  });
+
+  attackedMonster.setHp(data.attackedMonster.hp);
+  console.log(
+    `맞은 놈 번호 : ${attackedMonster.getMonsterIndex()}   갱신된 체력 : ${attackedMonster.getHp()}`,
+  );
 }
 function gameLoop() {
   // 렌더링 시에는 항상 배경 이미지부터 그려야 합니다! 그래야 다른 이미지들이 배경 이미지 위에 그려져요!
@@ -281,15 +293,16 @@ function gameLoop() {
         attackedSound.play();
         // TODO. 몬스터가 기지를 공격했을 때 서버로 이벤트 전송
         monsters.splice(i, 1);
+        sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex() });
 
         baseHp -= monster.Damage();
         base.takeDamage(monster.Damage());
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
-      sendEvent(PacketType.C2S_DIE_MONSTER);
       // TODO. 몬스터 사망 이벤트 전송
       monsters.splice(i, 1);
+      sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex() });
     }
   }
 
@@ -426,6 +439,12 @@ Promise.all([
         break;
       case PacketType.S2C_ENEMY_SPAWN_MONSTER:
         spawnOpponentMonster(packet.data.opponentMonsters);
+        break;
+      case PacketType.S2C_ENEMY_DIE_MONSTER:
+        destroyOpponentMonster(packet.data.destroyedOpponentMonsterIndex);
+        break;
+      case PacketType.S2C_GAMESYNC:
+        gameSync(packet.data);
         break;
     }
   });
