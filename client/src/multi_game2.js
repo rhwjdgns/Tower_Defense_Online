@@ -94,7 +94,7 @@ function initMap() {
   placeBase(basePosition, true);
   placeBase(opponentBasePosition, false);
 
-  towerIndex += 5;
+  towerIndex += INITIAL_TOWER_NUMBER;
 }
 
 function drawPath(path, context) {
