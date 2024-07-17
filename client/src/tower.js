@@ -5,7 +5,7 @@ export class Tower {
     this.y = y; // 타워 이미지 y 좌표
     this.width = 39; // 타워 이미지 가로 길이 (이미지 파일 길이에 따라 변경 필요하며 세로 길이와 비율을 맞춰주셔야 합니다!)
     this.height = 75; // 타워 이미지 세로 길이
-    this.attackPower = 40; // 타워 공격력
+    this.attackPower = 30; // 타워 공격력
     this.range = 300; // 타워 사거리
     this.cooldown = 0; // 타워 공격 쿨타임
     this.beamDuration = 0; // 타워 광선 지속 시간
