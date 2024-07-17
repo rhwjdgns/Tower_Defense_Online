@@ -1,4 +1,4 @@
-import { PacketType, RESOLUTION_HEIGHT, RESOLUTION_WIDTH } from '../constants.js';
+import { INITIAL_TOWER_NUMBER, PacketType, RESOLUTION_HEIGHT, RESOLUTION_WIDTH } from '../constants.js';
 import { createPlayData, GameData, getPlayData } from '../models/playData.model.js';
 import { createTowers, setTower } from '../models/tower.model.js';
 let queue = [];
@@ -85,7 +85,7 @@ function handleMatchRequest(socket, data) {
     let player1InitialTowerCoords = [];
     let player2InitialTowerCoords = [];
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < INITIAL_TOWER_NUMBER; i++) {
       const towerCoords1 = getRandomPositionNearPath(200, player1MonsterPath);
       const towerCoords2 = getRandomPositionNearPath(200, player2MonsterPath);
 
