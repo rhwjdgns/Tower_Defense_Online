@@ -1,4 +1,4 @@
-import { CLIENT_VERSION, PacketType } from '../constants.js';
+import { CLIENT_VERSION, INITIAL_TOWER_NUMBER, PacketType } from '../constants.js';
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
@@ -80,7 +80,7 @@ function initMap() {
   placeBase(basePosition, true);
   placeBase(opponentBasePosition, false);
 
-  towerIndex += 5;
+  towerIndex += INITIAL_TOWER_NUMBER;
 }
 function drawPath(path, context) {
   if (!path || path.length === 0) {
