@@ -1,5 +1,5 @@
 import { PacketType } from '../constants.js';
-import { getMonsters } from '../models/monster.model.js';
+import { getMonsters, setDamagedMonsterHp } from '../models/monster.model.js';
 import { getTowers, removeTower, setTower } from '../models/tower.model.js';
 import { sendGameSync } from './gameSyncHandler.js';
 
@@ -63,6 +63,7 @@ export const towerAttackHandler = (socket, userId, payload) => {
   );
 
   const attackedTower = attackedTowers.find((tower) => tower.towerIndex === towerIndex);
+  setDamagedMonsterHp(userId, damage, monsterIndex);
 
   sendGameSync(socket, userId, PacketType.S2C_ENEMY_TOWER_ATTACK, {
     attackedMonster,

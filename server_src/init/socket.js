@@ -4,10 +4,9 @@ import { towerAddOnHandler, towerAttackHandler } from '../handlers/tower.handler
 import { activeSessions } from '../app.js';
 import {
   handleDieMonster,
-  handleEnemyDieMonster,
-  handleEnemySpawnMonster,
   handleSpawnMonster,
 } from '../handlers/monster.handler.js';
+import { PacketType } from '../constants.js';
 
 const initSocket = (server) => {
   const io = new SocketIO(server);
@@ -20,26 +19,21 @@ const initSocket = (server) => {
       socket.userId = packet.userId;
 
       switch (packet.packetType) {
-        case 13: // C2S_MATCH_REQUEST
+        case PacketType.C2S_MATCH_REQUEST:
           handleMatchRequest(socket, packet);
           break;
-        case 5:
+        case PacketType.C2S_TOWER_BUY:
           towerAddOnHandler(socket, packet.userId, packet.payload);
           break;
-        case 6:
+        case PacketType.C2S_TOWER_ATTACK:
           towerAttackHandler(socket, packet.userId, packet.payload);
           break;
-        case 9: // C2S_SPAWN_MONSTER
+        case PacketType.C2S_SPAWN_MONSTER:
           handleSpawnMonster(socket, packet.userId, packet.payload);
           break;
-        case 11: // S2C_ENEMY_SPAWN_MONSTER
-          handleEnemySpawnMonster(packet.userId, packet.payload);
+        case PacketType.C2S_DIE_MONSTER:
+          handleDieMonster(socket, packet.userId, packet.payload);
           break;
-        case 10: // C2S_DIE_MONSTER
-          handleDieMonster(packet.userId, packet.payload);
-          break;
-        case 12: // S2C_ENEMY_DIE_MONSTER
-          handleEnemyDieMonster(packet.userId, packet.payload);
         // 다른 이벤트 핸들러 추가
         default:
           console.log(`Unknown packet type: ${packet.packetType}`);
