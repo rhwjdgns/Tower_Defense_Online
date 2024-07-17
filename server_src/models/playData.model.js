@@ -32,6 +32,7 @@ export class GameData {
     opponentUserInfo
   ) {
     this.score = 0;
+    this.nextMilestone = 1000;
     this.userGold = 1000;
     this.baseHp = 100;
     this.monsterPath = monsterPath;
@@ -51,15 +52,28 @@ export class GameData {
     return this.baseHp;
   }
 
+  getScore() {
+    return this.score;
+  }
+
+  getGold() {
+    return this.userGold;
+  }
+  
   setBaseHp(value) {
     this.baseHp = value;
   }
 
-  setGold(value) {
-    this.userGold = value;
+  spendGold(value) {
+    this.userGold -= value;
   }
 
-  setScore(value) {
-    this.score = value;
+  addScore(value) {
+    this.score += value;
+
+    if (this.score >= this.nextMilestone) {
+      this.nextMilestone += 1000;
+      this.userGold += 500;
+    }
   }
 }
