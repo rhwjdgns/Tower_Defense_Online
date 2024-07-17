@@ -23,8 +23,10 @@ const progressBarContainer = document.getElementById('progressBarContainer');
 const progressBarMessage = document.getElementById('progressBarMessage');
 const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
-const NUM_OF_MONSTERS = 5;
 
+const NUM_OF_MONSTERS = 5;
+let intervalId = null; //몬스터 생성 주기
+let killCount = 0; // 몬스터 잡은 횟수
 // 게임 데이터
 let towerCost = 500;
 let monsterSpawnInterval = 3000;
@@ -54,6 +56,8 @@ let isInitGame = false;
 // 이미지 로딩 파트
 const backgroundImage = new Image();
 backgroundImage.src = 'images/bg.webp';
+const opponentBackgroundImage = new Image();
+opponentBackgroundImage.src = 'images/bg2.webp';
 const towerImage = new Image();
 towerImage.src = 'images/tower.png';
 const baseImage = new Image();
@@ -173,33 +177,38 @@ function opponentTowerAttack(monsterValue, towerValue) {
     return monster.getMonsterIndex() === monsterValue.monsterIndex;
   });
 
+  attackedMonster.setHp(monsterValue.hp);
   attackedTower.attack(attackedMonster);
 }
-  
+
 function placeBase(position, isPlayer) {
-    if (isPlayer) {
-      if (!base) {
-        base = new Base(position.x, position.y, baseHp);
-        base.draw(ctx, baseImage);
-      }
-    } else {
-      if (!opponentBase) {
-        opponentBase = new Base(position.x, position.y, 0);
-        opponentBase.draw(opponentCtx, baseImage,true);
-      }
+  if (isPlayer) {
+    if (!base) {
+      base = new Base(position.x, position.y, baseHp);
+      base.draw(ctx, baseImage);
+    }
+  } else {
+    if (!opponentBase) {
+      opponentBase = new Base(position.x, position.y, baseHp);
+      opponentBase.draw(opponentCtx, baseImage, true);
     }
   }
+}
 function spawnMonster() {
   const monster = new Monster(monsterPath, monsterImages, monsterLevel);
   monster.setMonsterIndex(monsterIndex);
   monsters.push(monster);
 
-  sendEvent(PacketType.C2S_SPAWN_MONSTER, { hp: monster.getMaxHp(), monsterIndex });
+  sendEvent(PacketType.C2S_SPAWN_MONSTER, { hp: monster.getMaxHp(), monsterIndex, monsterLevel });
   monsterIndex++;
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 function spawnOpponentMonster(value) {
-  const newMonster = new Monster(opponentMonsterPath, monsterImages, 0);
+  const newMonster = new Monster(
+    opponentMonsterPath,
+    monsterImages,
+    value[value.length - 1].monsterLevel,
+  );
   newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
   opponentMonsters.push(newMonster);
 }
@@ -276,18 +285,7 @@ function gameLoop() {
         attackedSound.play();
         monsters.splice(i, 1);
         sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex(), score });
-        
-        //baseHp -= monster.Damage();
-        //base.takeDamage(monster.Damage());
-        //console.log(`Monster attacked base: Damage: ${monster.Damage()}, New Base HP: ${base.hp}`);
-
-        // 서버로 몬스터가 기지를 공격한 이벤트 전송
-        sendEvent(PacketType.C2S_MONSTER_ATTACK_BASE, {damage: monster.Damage()});
-        // serverSocket.emit('event', {
-        //   packetType: 14,
-        //   userId: userId,
-        //   payload: { damage: monster.Damage() },
-        // });
+        sendEvent(PacketType.C2S_MONSTER_ATTACK_BASE, { damage: monster.Damage() });
 
         // baseHp가 0이 되면 게임 오버
         if (baseHp <= 0) {
@@ -298,11 +296,19 @@ function gameLoop() {
     } else {
       monsters.splice(i, 1);
       sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex(), score });
+      killCount++;
+
+      if (killCount === 10 && monsterSpawnInterval > 1000) {
+        monsterSpawnInterval -= 500;
+        monsterLevel++;
+        killCount = 0;
+        startSpawning();
+      }
     }
   }
 
   // 상대 게임 캔버스 그리기
-  opponentCtx.drawImage(backgroundImage, 0, 0, opponentCanvas.width, opponentCanvas.height);
+  opponentCtx.drawImage(opponentBackgroundImage, 0, 0, opponentCanvas.width, opponentCanvas.height);
   drawPath(opponentMonsterPath, opponentCtx);
   opponentTowers.forEach((tower) => {
     tower.draw(opponentCtx, towerImage);
@@ -317,6 +323,19 @@ function gameLoop() {
   }
   requestAnimationFrame(gameLoop);
 }
+//몬스터의 스폰주기 설정
+function startSpawning() {
+  // 기존 interval이 있다면 중지
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+  }
+  // 새로운 interval 시작
+  intervalId = setInterval(spawnMonster, monsterSpawnInterval);
+}
+function opponentBaseAttacked(value) {
+  opponentBaseHp = value;
+  opponentBase.updateHp(opponentBaseHp);
+}
 function initGame(payload) {
   if (isInitGame) {
     return;
@@ -330,19 +349,21 @@ function initGame(payload) {
   opponentInitialTowerCoords = payload.opponentInitialTowerCoords;
   opponentBasePosition = payload.opponentBasePosition;
   opponentBaseHp = payload.opponentBaseHp;
-  opponentBase = new Base(opponentBasePosition.x, opponentBasePosition.y, opponentBaseHp);
-  opponentBase.draw(opponentCtx, baseImage,true);
+  opponentBase = new Base(opponentBasePosition.x, opponentBasePosition.y, baseHp);
+  opponentBase.draw(opponentCtx, baseImage, true);
+  opponentBaseHp = payload.baseHp;
 
   bgm = new Audio('sounds/bgm.mp3');
   bgm.loop = true;
   bgm.volume = 0.2;
   bgm.play();
   initMap();
-  setInterval(spawnMonster, monsterSpawnInterval);
+  startSpawning();
   gameLoop();
   isInitGame = true;
 }
 Promise.all([
+  new Promise((resolve) => (opponentBackgroundImage.onload = resolve)),
   new Promise((resolve) => (backgroundImage.onload = resolve)),
   new Promise((resolve) => (towerImage.onload = resolve)),
   new Promise((resolve) => (baseImage.onload = resolve)),
@@ -414,23 +435,6 @@ Promise.all([
       });
     }
   });
-
-  function updateBaseHp(newHp) {
-    baseHp = newHp;
-    serverSocket.emit('baseHpUpdate', { userId: localStorage.getItem('userId'), baseHp: newHp });
-  }
-  
-// 서버로부터 다른 클라이언트의 base HP 업데이트를 받는 핸들러
-serverSocket.on('event', (data) => {
-  console.log(`Received event: ${JSON.stringify(data)}`);
-  if (data.packetType === 'S2C_BASE_HP_UPDATE') {
-    if (data.userId === opponentUserId) {
-      console.log(`Updating opponent base HP: ${data.baseHp}`);
-      opponentBaseHp = data.baseHp;
-      opponentBase.updateHp(data.baseHp);
-    }
-  }
-});
   serverSocket.on('gameSync', (packet) => {
     switch (packet.packetType) {
       case PacketType.S2C_ENEMY_TOWER_SPAWN:
@@ -444,6 +448,9 @@ serverSocket.on('event', (data) => {
         break;
       case PacketType.S2C_ENEMY_DIE_MONSTER:
         destroyOpponentMonster(packet.data.destroyedOpponentMonsterIndex);
+        break;
+      case PacketType.S2C_UPDATE_BASE_HP:
+        opponentBaseAttacked(packet.data.opponentBaseHp);
         break;
       case PacketType.S2C_GAMESYNC:
         gameSync(packet.data);

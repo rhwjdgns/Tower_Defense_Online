@@ -1,42 +1,6 @@
 import { sendGameSync } from './gameSyncHandler.js';
 import { PacketType } from '../constants.js';
 import { getPlayData } from '../models/playData.model.js';
-
-let io;
-const bases = {}; // 각 플레이어의 베이스 정보를 저장
-
-function initializeBase(playerId, initialHp) {
-  bases[playerId] = {
-    hp: initialHp,
-    maxHp: initialHp,
-  };
-  console.log(`Base initialized: Player ID: ${playerId}, HP: ${initialHp}`);
-}
-
-function startGame(player1Id, player2Id) {
-  const initialHp = 100; // 초기 HP 값 설정
-  initializeBase(player1Id, initialHp);
-  initializeBase(player2Id, initialHp);
-
-  const gameDataPlayer1 = {
-    userGold: 500,
-    baseHp: initialHp,
-    opponentBaseHp: initialHp,
-    // 기타 초기화 데이터
-  };
-
-  const gameDataPlayer2 = {
-    userGold: 500,
-    baseHp: initialHp,
-    opponentBaseHp: initialHp,
-    // 기타 초기화 데이터
-  };
-
-  // 클라이언트로 초기 데이터 전송
-  io.to(player1Id).emit('initGame', gameDataPlayer1);
-  io.to(player2Id).emit('initGame', gameDataPlayer2);
-}
-
 // 게임 오버 패킷 생성 및 전송
 function sendGameOver(game, winner) {
   const loser = winner === game.player1 ? game.player2 : game.player1;
@@ -88,30 +52,6 @@ function handleMonsterBaseAttack(socket, userId, payload) {
 
   playerData.setBaseHp(playerData.getBaseHp() - payload.damage);
   sendGameSync(socket, userId, PacketType.S2C_UPDATE_BASE_HP, {playerBaseHp: playerData.getBaseHp()});
-  // if (bases[playerId]) {
-  //   bases[playerId].hp -= damage;
-  //   if (bases[playerId].hp < 0) {
-  //     bases[playerId].hp = 0;
-  //   }
-
-  //   io.emit('updateBaseHp', { playerId: playerId, hp: bases[playerId].hp });
-  //   console.log(`Base attacked: Player ID: ${playerId}, Damage: ${damage}, New HP: ${bases[playerId].hp}`);
-
-  //   // 추가: 상대 클라이언트에게 base HP 업데이트 이벤트 브로드캐스트
-  //   io.emit('event', {
-  //     packetType: PacketType.S2C_UPDATE_BASE_HP,
-  //     userId: playerId,
-  //     baseHp: bases[playerId].hp,
-  //   });
-  // }
 }
 
-function initialize(ioInstance) {
-  io = ioInstance;
-  io.on('connection', (socket) => {
-    console.log('New connection:', socket.id);
-    socket.on('baseHpUpdate', (data) => handleBaseHpUpdate(socket, data));
-  });
-}
-
-export { handleGameEnd, sendGameOver, handleMonsterBaseAttack, initialize, initializeBase, startGame, handleBaseHpUpdate };
+export { handleGameEnd, sendGameOver, handleMonsterBaseAttack, handleBaseHpUpdate };
