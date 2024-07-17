@@ -47,6 +47,10 @@ export class GameData {
     return this.opponentUserInfo;
   }
 
+  getBaseHp() {
+    return this.baseHp;
+  }
+
   setBaseHp(value) {
     this.baseHp = value;
   }
