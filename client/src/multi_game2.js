@@ -1,4 +1,4 @@
-import { CLIENT_VERSION, PacketType } from '../constants.js';
+import { CLIENT_VERSION, INITIAL_TOWER_NUMBER, PacketType } from '../constants.js';
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
