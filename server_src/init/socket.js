@@ -8,9 +8,13 @@ import {
   handleEnemySpawnMonster,
   handleSpawnMonster,
 } from '../handlers/monster.handler.js';
+import { handleMonsterAttack, handleGameSync, initialize, handleBaseHpUpdate } from '../handlers/gameHandler.js';
 
 const initSocket = (server) => {
   const io = new SocketIO(server);
+
+  initialize(io); //io 객체 초기화
+
   io.on('connection', (socket) => {
     console.log(`New user connected: ${socket.id}`);
 
@@ -40,6 +44,20 @@ const initSocket = (server) => {
           break;
         case 12: // S2C_ENEMY_DIE_MONSTER
           handleEnemyDieMonster(packet.userId, packet.payload);
+          break;
+        case 14: // C2S_MONSTER_ATTACK_BASE
+          handleMonsterAttack(packet.userId, packet.payload.damage);
+          console.log(`Monster attacked base: Player ID: ${packet.userId}, Damage: ${packet.payload.damage}`);
+          break;
+        case 15: // C2S_GAME_SYNC
+          handleGameSync(socket, packet.payload); // 게임 동기화 처리
+          break;
+        case 16: // S2C_UPDATE_BASE_HP
+          handleBaseHpUpdate(socket, packet.payload);
+          break;
+        case 17: // C2S_GAME_SYNC
+          handleGameSync(socket, packet.payload); // 게임 동기화 처리
+          break;  
         // 다른 이벤트 핸들러 추가
         default:
           console.log(`Unknown packet type: ${packet.packetType}`);
