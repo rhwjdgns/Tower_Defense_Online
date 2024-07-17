@@ -170,12 +170,17 @@ function placeNewTower() {
   tower.draw(ctx, towerImage);
 }
 function placeNewOpponentTower(value) {
-  opponentTowers = [];
-  value.forEach((element) => {
-    const tower = new Tower(element.tower.X, element.tower.Y);
-    opponentTowers.push(tower);
-  });
+  // opponentTowers = [];
+  // value.forEach((element) => {
+  //   const tower = new Tower(element.tower.X, element.tower.Y);
+  //   opponentTowers.push(tower);
+  // });
+  const newTowerCoords = value[value.length - 1].tower;
+  const newTower = new Tower(newTowerCoords.X, newTowerCoords.Y);
+  opponentTowers.push(newTower);
 }
+
+function opponentTowerAttack() {}
 
 function placeBase(position, isPlayer) {
   if (isPlayer) {
@@ -224,7 +229,10 @@ function gameLoop() {
       if (distance < tower.range) {
         const Attacked = tower.attack(monster);
         if (Attacked) {
-          sendEvent(PacketType.C2S_TOWER_ATTACK, { damage: tower.getAttackPower(), hp: monster.hp });
+          sendEvent(PacketType.C2S_TOWER_ATTACK, {
+            damage: tower.getAttackPower(),
+            monsterIndex: monster.getMonsterIndex(),
+          });
         }
       }
     });
@@ -386,7 +394,7 @@ Promise.all([
         placeNewOpponentTower(packet.data.opponentTowers);
         break;
       case PacketType.S2C_ENEMY_TOWER_ATTACK:
-        //타워 어택
+        opponentTowerAttack();
         break;
       case PacketType.S2C_ENEMY_SPAWN_MONSTER:
         spawnOpponentMonster(packet.data.opponentMonsters);

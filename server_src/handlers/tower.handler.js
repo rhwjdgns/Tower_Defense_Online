@@ -4,9 +4,12 @@ import { sendGameSync } from './gameSyncHandler.js';
 
 //서버에 타워를 추가한다
 export const towerAddOnHandler = (socket, userId, payload) => {
-  setTower(userId, payload.x, payload.y, payload.level);
+  const { x, y, level } = payload;
 
-  sendGameSync(socket, userId, PacketType.S2C_ENEMY_TOWER_SPAWN);
+  setTower(userId, x, y, level);
+  const mainTowers = getTowers(userId);
+
+  sendGameSync(socket, userId, PacketType.S2C_ENEMY_TOWER_SPAWN, { mainTowers });
 
   return {
     status: 'success',
@@ -49,9 +52,9 @@ export const towerRemoveHandler = (userId, payload) => {
 };
 
 export const towerAttackHandler = (socket, userId, payload) => {
-  payload.hp -= payload.damage;
+  const { damage, monsterIndex } = payload;
 
-  sendGameSync(socket, userId, false);
+  sendGameSync(socket, userId, PacketType.S2C_ENEMY_TOWER_ATTACK, {});
 
   //console.log(`타워 공격 성공!!! : ${payload.hp}`);
   //몬스터 인덱스로 맞춘 몬스터 찾기
