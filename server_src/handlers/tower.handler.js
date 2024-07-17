@@ -1,3 +1,4 @@
+import { PacketType } from '../constants.js';
 import { getTowers, removeTower, setTower } from '../models/tower.model.js';
 import { sendGameSync } from './gameSyncHandler.js';
 
@@ -5,7 +6,7 @@ import { sendGameSync } from './gameSyncHandler.js';
 export const towerAddOnHandler = (socket, userId, payload) => {
   setTower(userId, payload.x, payload.y, payload.level);
 
-  sendGameSync(socket, userId, false);
+  sendGameSync(socket, userId, PacketType.S2C_ENEMY_TOWER_SPAWN);
 
   return {
     status: 'success',

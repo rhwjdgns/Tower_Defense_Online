@@ -5,7 +5,7 @@ import { getTowers } from '../models/tower.model.js';
 import { CLIENTS } from './matchMakingHandler.js';
 
 // 상태 동기화 패킷 생성 및 전송
-function sendGameSync(socket, userId, spawnStart) {
+function sendGameSync(socket, userId, packetType) {
   const opponentPlayerId = getPlayData(userId).getOpponentInfo();
   const opponentClient = CLIENTS[opponentPlayerId];
 
@@ -23,11 +23,10 @@ function sendGameSync(socket, userId, spawnStart) {
   };
 
   const opponentPacket = {
-    packetType: PacketType.S2C_GAMESYNC,
+    packetType,
     data: {
       opponentTowers: mainTowers,
       opponentMonsters: mainMonster,
-      spawnStart,
     },
   };
 

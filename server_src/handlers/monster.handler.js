@@ -1,3 +1,4 @@
+import { PacketType } from '../constants.js';
 import { getMonsters, setMonster, removeMonster } from '../models/monster.model.js';
 import { sendGameSync } from './gameSyncHandler.js';
 
@@ -39,7 +40,7 @@ function handleSpawnMonster(socket, userId, payload) {
   // const mainMonster = getMonsters(userId);
   // const opponentMonsters = getMonsters(opponentPlayerId);
   // sendGameSync(socket, opponentMonsters, opponentClient, mainMonster);
-  sendGameSync(socket, userId, true);
+  sendGameSync(socket, userId, PacketType.S2C_ENEMY_SPAWN_MONSTER);
   console.log('아군 몬스터 생성', JSON.stringify(`Create Monster: ${monsterIndex}`));
   return { status: 'success', message: 'Monster created' };
 }

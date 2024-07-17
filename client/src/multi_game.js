@@ -1,3 +1,4 @@
+import { CLIENT_VERSION, PacketType } from '../constants.js';
 import { Base } from './base.js';
 import { Monster } from './monster.js';
 import { Tower } from './tower.js';
@@ -21,7 +22,7 @@ const progressBarMessage = document.getElementById('progressBarMessage');
 const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
 const NUM_OF_MONSTERS = 5;
-const CLIENT_VERSION = '1.0.0';
+
 // 게임 데이터
 let towerCost = 0;
 let monsterSpawnInterval = 3000;
@@ -140,7 +141,7 @@ function placeNewTower() {
   const { x, y } = getRandomPositionNearPath(200);
   const tower = new Tower(x, y);
   towers.push(tower);
-  sendEvent(5, { x, y, level: 1 });
+  sendEvent(PacketType.C2S_TOWER_BUY, { x, y, level: 1 });
 
   tower.draw(ctx, towerImage);
 }
@@ -163,7 +164,7 @@ function placeBase(position, isPlayer) {
 function spawnMonster() {
   const monster = new Monster(monsterPath, monsterImages, monsterLevel);
   monsters.push(monster);
-  sendEvent(9, { hp: monster.getMaxHp() });
+  sendEvent(PacketType.C2S_SPAWN_MONSTER, { hp: monster.getMaxHp() });
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 function spawnOpponentMonster(value) {
@@ -193,7 +194,7 @@ function gameLoop() {
       if (distance < tower.range) {
         const Attacked = tower.attack(monster);
         if (Attacked) {
-          sendEvent(6, { damage: tower.getAttackPower(), hp: monster.hp });
+          sendEvent(PacketType.C2S_TOWER_ATTACK, { damage: tower.getAttackPower(), hp: monster.hp });
         }
       }
     });
@@ -215,7 +216,7 @@ function gameLoop() {
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
-      sendEvent(10);
+      sendEvent(PacketType.C2S_DIE_MONSTER);
       monsters.splice(i, 1);
     }
   }
@@ -329,14 +330,28 @@ Promise.all([
       });
     }
   });
+  // 상태 동기화 이벤트 수신
   serverSocket.on('gameSync', (packet) => {
-    placeNewOpponentTower(packet.data.opponentTowers);
-    if (packet.data.opponentMonsters !== undefined && packet.data.spawnStart !== undefined) {
-      if (packet.data.spawnStart) {
+    switch (packet.packetType) {
+      case PacketType.S2C_ENEMY_TOWER_SPAWN:
+        placeNewOpponentTower(packet.data.opponentTowers);
+        break;
+      case PacketType.S2C_ENEMY_TOWER_ATTACK:
+        //타워 어택
+        break;
+      case PacketType.S2C_ENEMY_SPAWN_MONSTER:
         spawnOpponentMonster(packet.data.opponentMonsters);
-      }
+        break;
     }
   });
+  // serverSocket.on('gameSync', (packet) => {
+  //   placeNewOpponentTower(packet.data.opponentTowers);
+  //   if (packet.data.opponentMonsters !== undefined && packet.data.spawnStart !== undefined) {
+  //     if (packet.data.spawnStart) {
+  //       spawnOpponentMonster(packet.data.opponentMonsters);
+  //     }
+  //   }
+  // });
 });
 const buyTowerButton = document.createElement('button');
 buyTowerButton.textContent = '타워 구입';
