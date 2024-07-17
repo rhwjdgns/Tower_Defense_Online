@@ -72,6 +72,8 @@ function handleMatchRequest(socket, data) {
       packetType: PacketType.S2C_MATCH_FOUND_NOTIFICATION,
       opponentId: player2.userId,
     };
+
+
     //타워 생성
     createTowers(player1.userId);
     createTowers(player2.userId);
