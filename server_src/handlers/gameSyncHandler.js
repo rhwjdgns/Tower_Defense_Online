@@ -14,14 +14,15 @@ function sendGameSync(socket, userId, packetType, payload) {
     score,
   } = payload;
 
-  const opponentPlayerId = getPlayData(userId).getOpponentInfo();
+  const playerData = getPlayData(userId);
+  const opponentPlayerId = playerData.getOpponentInfo();
   const opponentClient = CLIENTS[opponentPlayerId];
 
   const playerPacket = {
     packetType: PacketType.S2C_GAMESYNC,
     data: {
-      gold,
-      score,
+      gold: playerData.userGold,
+      score: playerData.score,
       attackedMonster,
     },
   };
@@ -31,6 +32,7 @@ function sendGameSync(socket, userId, packetType, payload) {
     data: {
       opponentTowers: mainTowers,
       opponentMonsters: mainMonsters,
+      opponentBaseHp: playerData.baseHp,
       attackedOpponentMonster: attackedMonster,
       attackedOpponentTower: attackedTower,
       destroyedOpponentMonsterIndex: destroyedMonsterIndex,

@@ -230,6 +230,9 @@ function destroyOpponentMonster(index) {
 }
 function gameSync(data) {
   //예외 처리 부분
+  score = data.score;
+  userGold = data.gold;
+  
   if (data.attackedMonster === undefined) {
     return;
   }

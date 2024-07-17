@@ -32,7 +32,7 @@ export class GameData {
     opponentUserInfo
   ) {
     this.score = 0;
-    this.userGold = 100;
+    this.userGold = 1000;
     this.baseHp = 100;
     this.monsterPath = monsterPath;
     this.initialTowerCoords = initialTowerCoords;
@@ -48,10 +48,14 @@ export class GameData {
   }
 
   setBaseHp(value) {
-    this.baseHp -= value;
+    this.baseHp = value;
   }
 
   setGold(value) {
-    this.userGold += value;
+    this.userGold = value;
+  }
+
+  setScore(value) {
+    this.score = value;
   }
 }
