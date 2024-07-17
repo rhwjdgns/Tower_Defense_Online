@@ -91,8 +91,8 @@ function handleMatchRequest(socket, data) {
       player1InitialTowerCoords.push(towerCoords1);
       player2InitialTowerCoords.push(towerCoords2);
 
-      setTower(player1.userId, towerCoords1.x, towerCoords1.y, 1);
-      setTower(player2.userId, towerCoords2.x, towerCoords2.y, 1);
+      setTower(player1.userId, towerCoords1.x, towerCoords1.y, 1, i + 1);
+      setTower(player2.userId, towerCoords2.x, towerCoords2.y, 1, i + 1);
     }
 
     createPlayData(
@@ -104,8 +104,7 @@ function handleMatchRequest(socket, data) {
         player2MonsterPath,
         player2InitialTowerCoords,
         player2MonsterPath[player2MonsterPath.length - 1],
-        player2.userId,
-        player2.socket
+        player2.userId
       ),
     );
     createPlayData(
@@ -117,8 +116,7 @@ function handleMatchRequest(socket, data) {
         player1MonsterPath,
         player1InitialTowerCoords,
         player1MonsterPath[player1MonsterPath.length - 1],
-        player1.userId,
-        player1.socket
+        player1.userId
       ),
     );
 

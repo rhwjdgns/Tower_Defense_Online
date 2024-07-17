@@ -1,11 +1,16 @@
+import { PacketType } from '../constants.js';
+import { getMonsters, setDamagedMonsterHp } from '../models/monster.model.js';
 import { getTowers, removeTower, setTower } from '../models/tower.model.js';
 import { sendGameSync } from './gameSyncHandler.js';
 
 //서버에 타워를 추가한다
 export const towerAddOnHandler = (socket, userId, payload) => {
-  setTower(userId, payload.x, payload.y, payload.level);
+  const { x, y, level, towerIndex } = payload;
 
-  sendGameSync(socket, userId, false);
+  setTower(userId, x, y, level, towerIndex);
+  const mainTowers = getTowers(userId);
+
+  sendGameSync(socket, userId, PacketType.S2C_ENEMY_TOWER_SPAWN, { mainTowers });
 
   return {
     status: 'success',
@@ -48,10 +53,20 @@ export const towerRemoveHandler = (userId, payload) => {
 };
 
 export const towerAttackHandler = (socket, userId, payload) => {
-  payload.hp -= payload.damage;
+  const { damage, monsterIndex, towerIndex } = payload;
 
-  sendGameSync(socket, userId, false);
+  const attackedMonsters = getMonsters(userId);
+  const attackedTowers = getTowers(userId);
 
-  //console.log(`타워 공격 성공!!! : ${payload.hp}`);
-  //몬스터 인덱스로 맞춘 몬스터 찾기
+  const attackedMonster = attackedMonsters.find(
+    (monster) => monster.monsterIndex === monsterIndex,
+  );
+
+  const attackedTower = attackedTowers.find((tower) => tower.towerIndex === towerIndex);
+  setDamagedMonsterHp(userId, damage, monsterIndex);
+
+  sendGameSync(socket, userId, PacketType.S2C_ENEMY_TOWER_ATTACK, {
+    attackedMonster,
+    attackedTower,
+  });
 };

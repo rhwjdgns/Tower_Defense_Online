@@ -63,6 +63,12 @@ export class Monster {
   Damage() {
     return this.attackPower;
   }
+  setHp(value) {
+    this.hp = value;
+  }
+  getHp() {
+    return this.hp;
+  }
 
   draw(ctx, isOpponent = false) {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
