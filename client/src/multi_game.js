@@ -26,6 +26,8 @@ const NUM_OF_MONSTERS = 5;
 // 게임 데이터
 let towerCost = 0;
 let monsterSpawnInterval = 3000;
+let towerIndex = 1;
+let monsterIndex = 1;
 // 유저 데이터
 let userGold = 0;
 let base;
@@ -77,6 +79,8 @@ function initMap() {
   placeInitialTowers(opponentInitialTowerCoords, opponentTowers, opponentCtx);
   placeBase(basePosition, true);
   placeBase(opponentBasePosition, false);
+
+  towerIndex += 5;
 }
 function drawPath(path, context) {
   if (!path || path.length === 0) {
@@ -127,9 +131,13 @@ function getRandomPositionNearPath(maxDistance) {
   };
 }
 function placeInitialTowers(initialTowerCoords, initialTowers, context) {
+  let initTowerIndex = 1;
   initialTowerCoords.forEach((towerCoords) => {
     const tower = new Tower(towerCoords.x, towerCoords.y);
+    tower.setTowerIndex(initTowerIndex);
     initialTowers.push(tower);
+    initTowerIndex++;
+
     tower.draw(context, towerImage);
   });
 }
@@ -140,21 +148,44 @@ function placeNewTower() {
   }
   const { x, y } = getRandomPositionNearPath(200);
   const tower = new Tower(x, y);
+  tower.setTowerIndex(towerIndex);
   towers.push(tower);
-  sendEvent(PacketType.C2S_TOWER_BUY, { x, y, level: 1 });
 
+  sendEvent(PacketType.C2S_TOWER_BUY, { x, y, level: 1, towerIndex });
+  towerIndex++;
   tower.draw(ctx, towerImage);
 }
 function placeNewOpponentTower(value) {
-  // opponentTowers = [];
-  // value.forEach((element) => {
-  //   const tower = new Tower(element.tower.X, element.tower.Y);
-  //   opponentTowers.push(tower);
-  // });
-  const newTowerCoords = value[value.length - 1].tower;
-  const newTower = new Tower(newTowerCoords.X, newTowerCoords.Y);
+  const newTowerCoords = value[value.length - 1];
+  const newTower = new Tower(newTowerCoords.tower.X, newTowerCoords.tower.Y);
+  newTower.setTowerIndex(newTowerCoords.towerIndex);
   opponentTowers.push(newTower);
 }
+
+function opponentTowerAttack(monsterValue, towerValue) {
+  console.log(
+    `monsterValue : ${JSON.stringify(monsterValue)}   towerValue : ${JSON.stringify(towerValue)}`,
+  );
+
+  opponentTowers.forEach((element) => {
+    console.log('적 타워 : ' + element.getTowerIndex());
+  });
+
+  opponentMonsters.forEach((element) => {
+    console.log('적 몬스터 : ' + element.getMonsterIndex());
+  });
+
+  const attackedTower = opponentTowers.find((tower) => {
+    return tower.getTowerIndex() === towerValue.towerIndex;
+  });
+  const attackedMonster = opponentMonsters.find((monster) => {
+    return monster.getMonsterIndex() === monsterValue.monsterIndex;
+  });
+  console.log('피격 몬스터 : ' + attackedMonster);
+  console.log('공격 타워 : ' + attackedTower);
+  attackedTower.attack(attackedMonster);
+}
+
 function placeBase(position, isPlayer) {
   if (isPlayer) {
     base = new Base(position.x, position.y, baseHp);
@@ -166,8 +197,11 @@ function placeBase(position, isPlayer) {
 }
 function spawnMonster() {
   const monster = new Monster(monsterPath, monsterImages, monsterLevel);
+  monster.setMonsterIndex(monsterIndex);
   monsters.push(monster);
-  sendEvent(PacketType.C2S_SPAWN_MONSTER, { hp: monster.getMaxHp() });
+
+  sendEvent(PacketType.C2S_SPAWN_MONSTER, { hp: monster.getMaxHp(), monsterIndex });
+  monsterIndex++;
   // TODO. 서버로 몬스터 생성 이벤트 전송
 }
 function spawnOpponentMonster(value) {
@@ -200,6 +234,7 @@ function gameLoop() {
           sendEvent(PacketType.C2S_TOWER_ATTACK, {
             damage: tower.getAttackPower(),
             monsterIndex: monster.getMonsterIndex(),
+            towerIndex: tower.getTowerIndex(),
           });
         }
       }
@@ -243,7 +278,6 @@ function initGame(payload) {
   if (isInitGame) {
     return;
   }
-  console.log(payload);
   userGold = payload.userGold;
   baseHp = payload.baseHp;
   monsterPath = payload.monsterPath;
@@ -316,7 +350,6 @@ Promise.all([
     }
   });
 
-
   serverSocket.on('gameOver', (data) => {
     bgm.pause();
     const { isWin } = data;
@@ -343,21 +376,13 @@ Promise.all([
         placeNewOpponentTower(packet.data.opponentTowers);
         break;
       case PacketType.S2C_ENEMY_TOWER_ATTACK:
-        //타워 어택
+        opponentTowerAttack(packet.data.attackedOpponentMonster, packet.data.attackedOpponentTower);
         break;
       case PacketType.S2C_ENEMY_SPAWN_MONSTER:
         spawnOpponentMonster(packet.data.opponentMonsters);
         break;
     }
   });
-  // serverSocket.on('gameSync', (packet) => {
-  //   placeNewOpponentTower(packet.data.opponentTowers);
-  //   if (packet.data.opponentMonsters !== undefined && packet.data.spawnStart !== undefined) {
-  //     if (packet.data.spawnStart) {
-  //       spawnOpponentMonster(packet.data.opponentMonsters);
-  //     }
-  //   }
-  // });
 });
 const buyTowerButton = document.createElement('button');
 buyTowerButton.textContent = '타워 구입';

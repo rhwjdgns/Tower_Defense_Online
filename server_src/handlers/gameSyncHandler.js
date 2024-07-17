@@ -4,7 +4,7 @@ import { CLIENTS } from './matchMakingHandler.js';
 
 // 상태 동기화 패킷 생성 및 전송
 function sendGameSync(socket, userId, packetType, payload) {
-  const { mainTowers, mainMonsters, attackedMonster, gold, score} = payload;
+  const { mainTowers, mainMonsters, attackedMonster, attackedTower, gold, score } = payload;
 
   const opponentPlayerId = getPlayData(userId).getOpponentInfo();
   const opponentClient = CLIENTS[opponentPlayerId];
@@ -22,7 +22,8 @@ function sendGameSync(socket, userId, packetType, payload) {
     data: {
       opponentTowers: mainTowers,
       opponentMonsters: mainMonsters,
-      attackedOpponentMonster: attackedMonster
+      attackedOpponentMonster: attackedMonster,
+      attackedOpponentTower: attackedTower,
     },
   };
 

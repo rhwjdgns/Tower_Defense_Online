@@ -30,7 +30,7 @@ function handleEnemyDieMonster(userId, payload) {
 
 // 아군 몬스터 생성
 function handleSpawnMonster(socket, userId, payload) {
-  const monsterIndex = setMonster(userId, payload.hp);
+  const monsterIndex = setMonster(userId, payload.hp, payload.monsterIndex);
   const mainMonsters = getMonsters(userId);
 
   sendGameSync(socket, userId, PacketType.S2C_ENEMY_SPAWN_MONSTER, { mainMonsters });
