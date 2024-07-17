@@ -163,26 +163,12 @@ function placeNewOpponentTower(value) {
 }
 
 function opponentTowerAttack(monsterValue, towerValue) {
-  console.log(
-    `monsterValue : ${JSON.stringify(monsterValue)}   towerValue : ${JSON.stringify(towerValue)}`,
-  );
-
-  opponentTowers.forEach((element) => {
-    console.log('적 타워 : ' + element.getTowerIndex());
-  });
-
-  opponentMonsters.forEach((element) => {
-    console.log('적 몬스터 : ' + element.getMonsterIndex());
-  });
-
   const attackedTower = opponentTowers.find((tower) => {
     return tower.getTowerIndex() === towerValue.towerIndex;
   });
   const attackedMonster = opponentMonsters.find((monster) => {
     return monster.getMonsterIndex() === monsterValue.monsterIndex;
   });
-  console.log('피격 몬스터 : ' + attackedMonster);
-  console.log('공격 타워 : ' + attackedTower);
   attackedTower.attack(attackedMonster);
 }
 
@@ -208,6 +194,19 @@ function spawnOpponentMonster(value) {
   const newMonster = new Monster(opponentMonsterPath, monsterImages, 0);
   newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
   opponentMonsters.push(newMonster);
+}
+function gameSync(data) {
+  //예외 처리 부분
+  if (data.attackedMonster === undefined) {
+    return;
+  }
+
+  const attackedMonster = monsters.find((monster) => {
+    return monster.getMonsterIndex() === data.attackedMonster.monsterIndex;
+  });
+
+  attackedMonster.setHp(data.attackedMonster.hp);
+  console.log(`맞은 놈 번호 : ${attackedMonster.getMonsterIndex()}   갱신된 체력 : ${attackedMonster.getHp()}`);
 }
 function gameLoop() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
@@ -257,7 +256,7 @@ function gameLoop() {
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
-      sendEvent(PacketType.C2S_DIE_MONSTER);
+      //sendEvent(PacketType.C2S_DIE_MONSTER);
       monsters.splice(i, 1);
     }
   }
@@ -380,6 +379,9 @@ Promise.all([
         break;
       case PacketType.S2C_ENEMY_SPAWN_MONSTER:
         spawnOpponentMonster(packet.data.opponentMonsters);
+        break;
+      case PacketType.S2C_GAMESYNC:
+        gameSync(packet.data);
         break;
     }
   });

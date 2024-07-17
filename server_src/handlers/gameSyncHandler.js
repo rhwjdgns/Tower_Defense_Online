@@ -14,6 +14,7 @@ function sendGameSync(socket, userId, packetType, payload) {
     data: {
       gold,
       score,
+      attackedMonster,
     },
   };
 
