@@ -169,6 +169,7 @@ function opponentTowerAttack(monsterValue, towerValue) {
   const attackedMonster = opponentMonsters.find((monster) => {
     return monster.getMonsterIndex() === monsterValue.monsterIndex;
   });
+
   attackedTower.attack(attackedMonster);
 }
 
@@ -195,6 +196,13 @@ function spawnOpponentMonster(value) {
   newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
   opponentMonsters.push(newMonster);
 }
+function destroyOpponentMonster(index) {
+  const destroyedMonsterIndex = opponentMonsters.findIndex((monster) => {
+    return monster.getMonsterIndex() === index;
+  });
+
+  opponentMonsters.splice(destroyedMonsterIndex, 1);
+}
 function gameSync(data) {
   //예외 처리 부분
   if (data.attackedMonster === undefined) {
@@ -206,7 +214,9 @@ function gameSync(data) {
   });
 
   attackedMonster.setHp(data.attackedMonster.hp);
-  console.log(`맞은 놈 번호 : ${attackedMonster.getMonsterIndex()}   갱신된 체력 : ${attackedMonster.getHp()}`);
+  console.log(
+    `맞은 놈 번호 : ${attackedMonster.getMonsterIndex()}   갱신된 체력 : ${attackedMonster.getHp()}`,
+  );
 }
 function gameLoop() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
@@ -250,14 +260,15 @@ function gameLoop() {
         attackedSound.volume = 0.3;
         attackedSound.play();
         monsters.splice(i, 1);
+        sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex() });
 
         baseHp -= monster.Damage();
         base.takeDamage(monster.Damage());
         // baseHp가 0이되면 게임 오버, baseHp가 줄어들면 서버에 전달
       }
     } else {
-      sendEvent(PacketType.C2S_DIE_MONSTER);
       monsters.splice(i, 1);
+      sendEvent(PacketType.C2S_DIE_MONSTER, { monsterIndex: monster.getMonsterIndex() });
     }
   }
   opponentCtx.drawImage(backgroundImage, 0, 0, opponentCanvas.width, opponentCanvas.height);
@@ -379,6 +390,9 @@ Promise.all([
         break;
       case PacketType.S2C_ENEMY_SPAWN_MONSTER:
         spawnOpponentMonster(packet.data.opponentMonsters);
+        break;
+      case PacketType.S2C_ENEMY_DIE_MONSTER:
+        destroyOpponentMonster(packet.data.destroyedOpponentMonsterIndex);
         break;
       case PacketType.S2C_GAMESYNC:
         gameSync(packet.data);

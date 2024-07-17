@@ -32,7 +32,7 @@ const initSocket = (server) => {
           handleSpawnMonster(socket, packet.userId, packet.payload);
           break;
         case PacketType.C2S_DIE_MONSTER:
-          handleDieMonster(packet.userId, packet.payload);
+          handleDieMonster(socket, packet.userId, packet.payload);
           break;
         // 다른 이벤트 핸들러 추가
         default:
