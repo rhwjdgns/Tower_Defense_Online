@@ -1,5 +1,4 @@
 const monsters = {};
-let monsterIndex = 0;
 
 export const createMonsters = (uuid) => {
   monsters[uuid] = [];
@@ -9,11 +8,11 @@ export const getMonsters = (uuid) => {
   return monsters[uuid];
 };
 
-export const setMonster = (uuid, hp) => {
+export const setMonster = (uuid, hp, monsterIndex) => {
   if (monsters[uuid] === undefined) {
     createMonsters(uuid);
   }
-  monsterIndex++;
+  
   console.log(monsterIndex);
   monsters[uuid].push({ monsterIndex, hp });
   return monsterIndex;
