@@ -14,8 +14,8 @@ function sendGameSync(socket, userId, packetType, payload) {
   const playerPacket = {
     packetType: PacketType.S2C_GAMESYNC,
     data: {
-      gold: playerData.userGold,
-      score: playerData.score,
+      gold: playerData.getGold(),
+      score: playerData.getScore(),
       attackedMonster,
       baseHp: playerData.baseHp,
     },

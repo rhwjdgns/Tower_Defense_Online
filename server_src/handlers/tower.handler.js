@@ -1,14 +1,18 @@
 import { PacketType } from '../constants.js';
 import { getMonsters, setDamagedMonsterHp } from '../models/monster.model.js';
+import { getPlayData } from '../models/playData.model.js';
 import { getTowers, removeTower, setTower } from '../models/tower.model.js';
 import { sendGameSync } from './gameSyncHandler.js';
 
 //서버에 타워를 추가한다
 export const towerAddOnHandler = (socket, userId, payload) => {
-  const { x, y, level, towerIndex } = payload;
+  const { x, y, level, towerIndex, towerCost } = payload;
 
   setTower(userId, x, y, level, towerIndex);
   const mainTowers = getTowers(userId);
+
+  const playerData = getPlayData(userId);
+  playerData.spendGold(towerCost);
 
   sendGameSync(socket, userId, PacketType.S2C_ENEMY_TOWER_SPAWN, { mainTowers });
 
