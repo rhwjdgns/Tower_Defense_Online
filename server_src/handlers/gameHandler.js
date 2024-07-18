@@ -1,6 +1,7 @@
 import { getPlayData, getGameByUserId } from '../models/playData.model.js';
 import { prisma } from '../utils/prisma/index.js';
 import { PacketType } from '../constants.js';
+import { sendGameSync } from './gameSyncHandler.js';
 
 // 게임 오버 패킷 생성 및 전송
 function sendGameOver(game, winnerId, loserId) {
