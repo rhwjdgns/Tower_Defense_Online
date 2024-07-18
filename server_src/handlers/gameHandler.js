@@ -4,37 +4,54 @@ import { PacketType } from '../constants.js';
 import { sendGameSync } from './gameSyncHandler.js';
 import { CLIENTS } from './matchMakingHandler.js';
 
+let isGameOver = false;
 // 게임 오버 패킷 생성 및 전송
 function sendGameOver(winnerSocket, loserSocket, winnerId, loserId) {
+  isGameOver = true;
+
   const winnerPacket = {
     packetType: PacketType.S2C_GAME_OVER_NOTIFICATION,
     isWin: true,
     message: 'You won!',
-    finalScore: getPlayData(winnerId).getScore()
+    finalScore: getPlayData(winnerId).getScore(),
   };
 
   const loserPacket = {
     packetType: PacketType.S2C_GAME_OVER_NOTIFICATION,
     isWin: false,
     message: 'You lost!',
-    finalScore: getPlayData(loserId).getScore()
+    finalScore: getPlayData(loserId).getScore(),
   };
 
   winnerSocket.emit('event', winnerPacket);
   loserSocket.emit('event', loserPacket);
 
-  // 점수 저장 로직 추가
-  console.log(`winner Score : ${getPlayData(winnerId).getScore()}
-               loser Score : ${getPlayData(loserId).getScore()}`);
   saveScore(winnerId, getPlayData(winnerId).getScore());
   saveScore(loserId, getPlayData(loserId).getScore());
 }
 
 function saveScore(userId, finalScore) {
   console.log(`Saving score for user: ${userId}, score: ${finalScore}`);
-  prisma.user.findUnique({ where: { userId }, include: { userInfo: true } })
-    .then(user => {
-      const highScore = user.userInfo.highScore || '0';
+  prisma.user
+    .findUnique({ where: { userId }, include: { userInfo: true } })
+    .then((user) => {
+      let highScore = 0;
+
+      if (!user.userInfo) {
+        console.log('없음');
+        prisma.userInfo.create({
+          data: {
+            userId,
+            highScore: '0',
+            win: '0', // 초기화 필요한 필드 설정
+            lose: '0',
+          },
+        });
+      } else {
+        console.log('있음');
+        highScore = user.userInfo.highScore;
+      }
+
       console.log(`Current high score: ${highScore}`);
 
       if (finalScore > parseInt(highScore, 10)) {
@@ -47,7 +64,7 @@ function saveScore(userId, finalScore) {
     .then(() => {
       console.log(`New high score set for user: ${userId}, score: ${finalScore}`);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Error saving score:', error);
     });
 }
@@ -57,11 +74,16 @@ function handleMonsterBaseAttack(socket, userId, payload) {
   const playerData = getPlayData(userId);
 
   playerData.setBaseHp(playerData.getBaseHp() - payload.damage);
-  sendGameSync(socket, userId, PacketType.S2C_UPDATE_BASE_HP, { playerBaseHp: playerData.getBaseHp() });
+  sendGameSync(socket, userId, PacketType.S2C_UPDATE_BASE_HP, {
+    playerBaseHp: playerData.getBaseHp(),
+  });
 
   const opponentUserId = playerData.opponentUserInfo;
   const opponentClient = CLIENTS[opponentUserId];
-  
+
+  if (isGameOver) {
+    return;
+  }
 
   // baseHp가 0이 되면 게임 오버 패킷 전송
   if (playerData.getBaseHp() <= 0) {
@@ -84,12 +106,28 @@ function handleGameEnd(socket, userId, packet) {
   const { score } = packet;
   console.log(`Saving score for user: ${userId}, score: ${score}`);
 
-  prisma.user.findUnique({ where: { userId }, include: { userInfo: true } })
-    .then(user => {
-      const highScore = parseInt(user.userInfo.highScore || '0', 10);
-      console.log(`Current high score: ${highScore}`);
+  prisma.user
+    .findUnique({ where: { userId }, include: { userInfo: true } })
+    .then((user) => {
+      let highScore = 0;
 
+      if (!prisma.userInfo) {
+        console.log('없음 수신');
+        prisma.userInfo.create({
+          data: {
+            userId,
+            highScore: '0',
+            win: '0', // 초기화 필요한 필드 설정
+            lose: '0',
+          },
+        });
+      } else {
+        highScore = parseInt(user.userInfo.highScore || '0', 10);
+      }
+
+      console.log(`Current high score: ${highScore}`);
       if (score > highScore) {
+        console.log('있음 수신');
         return prisma.userInfo.update({
           where: { userId },
           data: { highScore: score.toString() },
@@ -100,7 +138,7 @@ function handleGameEnd(socket, userId, packet) {
       console.log(`New high score set for user: ${userId}, score: ${score}`);
       socket.emit('gameEnd', { success: true });
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Error saving score:', error);
       socket.emit('gameEnd', { success: false, message: 'Internal server error' });
     });
