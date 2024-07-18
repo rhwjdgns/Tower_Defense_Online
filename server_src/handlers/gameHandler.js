@@ -2,6 +2,7 @@ import { getPlayData, getGameByUserId } from '../models/playData.model.js';
 import { prisma } from '../utils/prisma/index.js';
 import { PacketType } from '../constants.js';
 import { sendGameSync } from './gameSyncHandler.js';
+import { CLIENTS } from './matchMakingHandler.js';
 
 // 게임 오버 패킷 생성 및 전송
 function sendGameOver(game, winnerId, loserId) {
@@ -21,20 +22,21 @@ function sendGameOver(game, winnerId, loserId) {
 
   console.log(`Sending game over packet to winner: ${winnerId} and loser: ${loserId}`);
 
-  const winnerSocket = getPlayData(winnerId).socket;
-  const loserSocket = getPlayData(loserId).socket;
+  const winnerSocket = CLIENTS[winnerId];
+  const loserSocket = CLIENTS[loserId];
 
-  if (!winnerSocket || !loserSocket) {
+  if (winnerSocket && loserSocket) {
+    console.log(`Sending winner packet: ${JSON.stringify(winnerPacket)}`);
+    console.log(`Sending loser packet: ${JSON.stringify(loserPacket)}`);
+
+    winnerSocket.emit('event', winnerPacket);
+    loserSocket.emit('event', loserPacket);
+
+    saveScore(winnerId, getPlayData(winnerId).getScore());
+    saveScore(loserId, getPlayData(loserId).getScore());
+  } else {
     console.error(`Socket not found for winner: ${winnerId} or loser: ${loserId}`);
-    return;
   }
-
-  winnerSocket.emit('event', winnerPacket);
-  loserSocket.emit('event', loserPacket);
-
-  // 점수 저장 로직 추가
-  saveScore(winnerId, getPlayData(winnerId).getScore());
-  saveScore(loserId, getPlayData(loserId).getScore());
 }
 
 function saveScore(userId, finalScore) {
@@ -65,7 +67,6 @@ function handleBaseHpUpdate(socket, data) {
   const playerData = getPlayData(userId);
   if (playerData) {
     playerData.setBaseHp(baseHp);
-    // 다른 클라이언트로 base HP 업데이트 브로드캐스트
     console.log(`Broadcasting base HP update: User ID: ${userId}, Base HP: ${baseHp}`);
     socket.broadcast.emit('event', {
       packetType: PacketType.S2C_UPDATE_BASE_HP,
@@ -73,19 +74,26 @@ function handleBaseHpUpdate(socket, data) {
       baseHp: baseHp,
     });
 
-    // baseHp가 0이 되면 게임 오버 패킷 전송
     if (playerData.getBaseHp() <= 0) {
       const game = getGameByUserId(userId);
+      console.log(`Game found for user ${userId}: ${JSON.stringify(game)}`);  // Debugging line
       if (game) {
-        const opponentUserId = game.opponentUserInfo.userId === userId ? game.opponentUserInfo.opponentUserId : game.opponentUserInfo.userId;
+        const opponentUserId = game.player1.userId === userId ? game.player2.userId : game.player1.userId;
         const playerScore = playerData.getScore();
-        const opponentScore = getPlayData(opponentUserId).getScore();
+        const opponentScore = getPlayData(opponentUserId)?.getScore();
+
+        if (opponentScore === undefined) {
+          console.error(`Opponent score not found for User ID: ${opponentUserId}`);
+          return;
+        }
 
         if (playerScore > opponentScore) {
           sendGameOver(game, userId, opponentUserId);
         } else {
           sendGameOver(game, opponentUserId, userId);
         }
+      } else {
+        console.log(`No game found for User ID: ${userId}`);
       }
     }
   } else {
@@ -96,27 +104,33 @@ function handleBaseHpUpdate(socket, data) {
 // 몬스터 공격 처리
 function handleMonsterBaseAttack(socket, userId, payload) {
   const playerData = getPlayData(userId);
-
-  playerData.setBaseHp(playerData.getBaseHp() - payload.damage);
+  const newBaseHp = playerData.getBaseHp() - payload.damage;
+  playerData.setBaseHp(newBaseHp);
   sendGameSync(socket, userId, PacketType.S2C_UPDATE_BASE_HP, { playerBaseHp: playerData.getBaseHp() });
 
-  // baseHp가 0이 되면 게임 오버 패킷 전송
-  if (playerData.getBaseHp() <= 0) {
+  if (newBaseHp <= 0) {
     const game = getGameByUserId(userId);
+    console.log(`Game found for user ${userId}: ${JSON.stringify(game)}`);  // Debugging line
     if (game) {
-      const opponentUserId = game.opponentUserInfo.userId === userId ? game.opponentUserInfo.opponentUserId : game.opponentUserInfo.userId;
+      const opponentUserId = game.player1.userId === userId ? game.player2.userId : game.player1.userId;
       const playerScore = playerData.getScore();
-      const opponentScore = getPlayData(opponentUserId).getScore();
+      const opponentScore = getPlayData(opponentUserId)?.getScore();
+
+      if (opponentScore === undefined) {
+        console.error(`Opponent score not found for User ID: ${opponentUserId}`);
+        return;
+      }
 
       if (playerScore > opponentScore) {
         sendGameOver(game, userId, opponentUserId);
       } else {
         sendGameOver(game, opponentUserId, userId);
       }
+    } else {
+      console.log(`No game found for User ID: ${userId}`);
     }
   }
 }
-
 // 게임 종료 요청 처리
 function handleGameEnd(socket, userId, packet) {
   const { score } = packet;
@@ -157,8 +171,8 @@ function checkGameOver(userId) {
         sendGameOver(game, game.player2.userId, game.player1.userId);
       }
 
-      handleGameEnd(game.player1.socket, game.player1.userId, { score: player1Data.getScore() });
-      handleGameEnd(game.player2.socket, game.player2.userId, { score: player2Data.getScore() });
+      handleGameEnd(CLIENTS[game.player1.userId], game.player1.userId, { score: player1Data.getScore() });
+      handleGameEnd(CLIENTS[game.player2.userId], game.player2.userId, { score: player2Data.getScore() });
     }
   }
 }

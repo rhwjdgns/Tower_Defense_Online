@@ -420,68 +420,68 @@ Promise.all([
     console.log(`서버로부터 이벤트 수신: ${JSON.stringify(data)}`);
 
     if (data.packetType === 14) {
-      progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
-      let progressValue = 0;
-      const progressInterval = setInterval(() => {
-        progressValue += 10;
-        progressBar.value = progressValue;
-        progressBar.style.display = 'block';
-        loader.style.display = 'none';
-        if (progressValue >= 100) {
-          clearInterval(progressInterval);
-          progressBarContainer.style.display = 'none';
-          progressBar.style.display = 'none';
-          buyTowerButton.style.display = 'block';
-          canvas.style.display = 'block';
-          opponentCanvas.style.display = 'block';
-          if (!isInitGame) {
-            initGame(payload);
-          }
-        }
-      }, 300);
+        progressBarMessage.textContent = '게임이 3초 뒤에 시작됩니다.';
+        let progressValue = 0;
+        const progressInterval = setInterval(() => {
+            progressValue += 10;
+            progressBar.value = progressValue;
+            progressBar.style.display = 'block';
+            loader.style.display = 'none';
+            if (progressValue >= 100) {
+                clearInterval(progressInterval);
+                progressBarContainer.style.display = 'none';
+                progressBar.style.display = 'none';
+                buyTowerButton.style.display = 'block';
+                canvas.style.display = 'block';
+                opponentCanvas.style.display = 'block';
+                if (!isInitGame) {
+                    initGame(payload);
+                }
+            }
+        }, 300);
     }
 
     if (data.packetType === PacketType.S2C_GAME_OVER_NOTIFICATION) {
-      console.log('Game over notification received:', data); 
-      bgm.pause();
-      const { isWin, message } = data;
-      const winSound = new Audio('sounds/win.wav');
-      const loseSound = new Audio('sounds/lose.wav');
-      winSound.volume = 0.3;
-      loseSound.volume = 0.3;
-    
-      const alertMessage = isWin ? 'Victory! ' : 'Defeat! ';
-      const finalMessage = alertMessage + message;
-    
-      const soundToPlay = isWin ? winSound : loseSound;
-      soundToPlay.play().then(() => {
-        showAlertAndSaveScore(finalMessage);
-      });
+        console.log('Game over notification received:', data); // 패킷 수신 확인 로그
+        bgm.pause();
+        const { isWin, message } = data;
+        const winSound = new Audio('sounds/win.wav');
+        const loseSound = new Audio('sounds/lose.wav');
+        winSound.volume = 0.3;
+        loseSound.volume = 0.3;
+
+        const alertMessage = isWin ? 'Victory! ' : 'Defeat! ';
+        const finalMessage = alertMessage + message;
+
+        const soundToPlay = isWin ? winSound : loseSound;
+        soundToPlay.play().then(() => {
+            showAlertAndSaveScore(finalMessage);
+        });
     }
-  });
-  
-  function showAlertAndSaveScore(message) {
+});
+
+function showAlertAndSaveScore(message) {
     const finalScore = score; // 최종 점수 저장
     fetch('/api/saveScore', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, score: finalScore }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, score: finalScore }),
     }).then(response => response.json())
-      .then(data => {
-        console.log('Score save response:', data);
-        if (data.message === 'Score saved successfully') {
-          console.log('Score saved successfully');
-        } else {
-          console.error('Failed to save score:', data.message);
-        }
-        showAlertAndRedirect(message);
-      }).catch(error => {
-        console.error('Error saving score:', error);
-        showAlertAndRedirect(message);
-      });
-  }
-  
-  function showAlertAndRedirect(message) {
+        .then(data => {
+            console.log('Score save response:', data);
+            if (data.message === 'Score saved successfully') {
+                console.log('Score saved successfully');
+            } else {
+                console.error('Failed to save score:', data.message);
+            }
+            showAlertAndRedirect(message);
+        }).catch(error => {
+            console.error('Error saving score:', error);
+            showAlertAndRedirect(message);
+        });
+}
+
+function showAlertAndRedirect(message) {
     const alertDiv = document.createElement('div');
     alertDiv.style.position = 'absolute';
     alertDiv.style.top = '50%';
@@ -492,10 +492,10 @@ Promise.all([
     alertDiv.style.border = '1px solid black';
     alertDiv.style.textAlign = 'center';
     alertDiv.style.zIndex = '1000';
-  
+
     const alertMessage = document.createElement('p');
     alertMessage.textContent = message;
-  
+
     const okButton = document.createElement('button');
     okButton.textContent = 'OK';
     okButton.style.marginTop = '10px';
@@ -503,14 +503,13 @@ Promise.all([
     okButton.style.fontSize = '16px';
     okButton.style.cursor = 'pointer';
     okButton.addEventListener('click', () => {
-      window.location.href = 'index.html';
+        window.location.href = 'index.html';
     });
-  
+
     alertDiv.appendChild(alertMessage);
     alertDiv.appendChild(okButton);
     document.body.appendChild(alertDiv);
-  }
-
+}
   serverSocket.on('gameSync', (packet) => {
     switch (packet.packetType) {
       case PacketType.S2C_ENEMY_TOWER_SPAWN:

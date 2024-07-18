@@ -1,7 +1,15 @@
 const playData = {}; // 모든 게임 데이터 목록
 
 export const createPlayData = (uuid, initData) => {
-  playData[uuid] = initData;
+  playData[uuid] = new GameData(
+    initData.monsterPath,
+    initData.initialTowerCoords,
+    initData.basePosition,
+    initData.opponentMonsterPath,
+    initData.opponentInitialTowerCoords,
+    initData.opponentBasePosition,
+    initData.opponentUserInfo
+  );
 };
 
 export const getPlayData = (uuid) => {
@@ -21,12 +29,17 @@ export const clearPlayData = (uuid) => {
 };
 
 export const getGameByUserId = (userId) => {
-  // 모든 게임 객체를 순회하며 userId가 포함된 게임 객체를 찾음
   for (const [uuid, game] of Object.entries(playData)) {
     if (uuid === userId || game.opponentUserInfo === userId) {
+      const opponentUserId = uuid === userId ? game.opponentUserInfo : uuid;
+      const player1 = uuid === userId ? uuid : game.opponentUserInfo;
+      const player2 = uuid === userId ? game.opponentUserInfo : uuid;
+
+      console.log(`Found game for user: ${userId}, player1: ${player1}, player2: ${player2}`);
+
       return {
-        player1: { userId: uuid, data: game },
-        player2: { userId: game.opponentUserInfo, data: getPlayData(game.opponentUserInfo) }
+        player1: { userId: player1, data: game },
+        player2: { userId: player2, data: getPlayData(opponentUserId) }
       };
     }
   }
