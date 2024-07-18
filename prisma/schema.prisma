@@ -8,30 +8,33 @@ datasource db {
 }
 
 model user {
-  userId       String  @id @default(uuid()) // 필수 필드로 유지
-  userPw       String  @map("password")
-  userInfo     userInfo?
+  userPw       String            @map("password")
+  userId       String            @id @default(uuid())
   gameResults1 game_result_log[] @relation("Player1")
   gameResults2 game_result_log[] @relation("Player2")
+  userInfo     userInfo?
 }
 
 model userInfo {
-  userId    String @id
+  userId    String  @id
   highScore String? @map("highscore")
   win       String?
   lose      String?
-  user      user   @relation(fields: [userId], references: [userId])
+  user      user    @relation(fields: [userId], references: [userId])
 }
 
 model game_result_log {
-  gameId       Int    @id @default(autoincrement())
-  player1      String @map("player_1")
-  player1Score Int    @map("1_score")
+  player1      String    @map("player_1")
+  player1Score Int       @map("1_score")
   startTime    DateTime? @default(now()) @map("start_time")
-  player2      String?  @map("player_2")
+  player2      String?   @map("player_2")
   win          Int?
   endTime      DateTime? @default(now()) @map("end_time")
-  player2Score Int?     @map("2_score")
-  user_player1 user     @relation("Player1", fields: [player1], references: [userId])
-  user_player2 user?    @relation("Player2", fields: [player2], references: [userId])
+  player2Score Int?      @map("2_score")
+  gameId       Int       @id @default(autoincrement())
+  user_player1 user      @relation("Player1", fields: [player1], references: [userId])
+  user_player2 user?     @relation("Player2", fields: [player2], references: [userId])
+
+  @@index([player1], map: "game_result_log_player_1_fkey")
+  @@index([player2], map: "game_result_log_player_2_fkey")
 }

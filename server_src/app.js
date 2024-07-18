@@ -126,13 +126,24 @@ app.post('/api/saveScore', async (req, res) => {
       include: { userInfo: true },
     });
 
-    const highScore = user.userInfo.highScore || 0;
+    let highScore = 0;
+    
     console.log(`Current high score: ${highScore}`);
+    if (user.userInfo === null) {
+      prisma.userInfo.create({
+        data: {
+          userId: userId,
+          highScore: '0'
+        }
+      })
+    } else {
+      highScore = user.userInfo.highScore || 0;
+    }
 
     if (score > highScore) {
       await prisma.userInfo.update({
         where: { userId },
-        data: { highScore: score },
+        data: { highScore: toString(score) },
       });
       console.log(`New high score set for user: ${userId}, score: ${score}`);
     }
