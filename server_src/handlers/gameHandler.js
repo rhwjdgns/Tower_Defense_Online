@@ -1,9 +1,11 @@
 import { getPlayData, getGameByUserId } from '../models/playData.model.js';
 import { prisma } from '../utils/prisma/index.js';
 import { PacketType } from '../constants.js';
+import { sendGameSync } from './gameSyncHandler.js';
+import { CLIENTS } from './matchMakingHandler.js';
 
 // 게임 오버 패킷 생성 및 전송
-function sendGameOver(game, winnerId, loserId) {
+function sendGameOver(winnerSocket, loserSocket, winnerId, loserId) {
   const winnerPacket = {
     packetType: PacketType.S2C_GAME_OVER_NOTIFICATION,
     isWin: true,
@@ -18,20 +20,12 @@ function sendGameOver(game, winnerId, loserId) {
     finalScore: getPlayData(loserId).getScore()
   };
 
-  console.log(`Sending game over packet to winner: ${winnerId} and loser: ${loserId}`);
-
-  const winnerSocket = getPlayData(winnerId).socket;
-  const loserSocket = getPlayData(loserId).socket;
-
-  if (!winnerSocket || !loserSocket) {
-    console.error(`Socket not found for winner: ${winnerId} or loser: ${loserId}`);
-    return;
-  }
-
   winnerSocket.emit('event', winnerPacket);
   loserSocket.emit('event', loserPacket);
 
   // 점수 저장 로직 추가
+  console.log(`winner Score : ${getPlayData(winnerId).getScore()}
+               loser Score : ${getPlayData(loserId).getScore()}`);
   saveScore(winnerId, getPlayData(winnerId).getScore());
   saveScore(loserId, getPlayData(loserId).getScore());
 }
@@ -58,40 +52,6 @@ function saveScore(userId, finalScore) {
     });
 }
 
-// Base HP 업데이트 처리
-function handleBaseHpUpdate(socket, data) {
-  const { userId, baseHp } = data;
-  const playerData = getPlayData(userId);
-  if (playerData) {
-    playerData.setBaseHp(baseHp);
-    // 다른 클라이언트로 base HP 업데이트 브로드캐스트
-    console.log(`Broadcasting base HP update: User ID: ${userId}, Base HP: ${baseHp}`);
-    socket.broadcast.emit('event', {
-      packetType: PacketType.S2C_UPDATE_BASE_HP,
-      userId: userId,
-      baseHp: baseHp,
-    });
-
-    // baseHp가 0이 되면 게임 오버 패킷 전송
-    if (playerData.getBaseHp() <= 0) {
-      const game = getGameByUserId(userId);
-      if (game) {
-        const opponentUserId = game.opponentUserInfo.userId === userId ? game.opponentUserInfo.opponentUserId : game.opponentUserInfo.userId;
-        const playerScore = playerData.getScore();
-        const opponentScore = getPlayData(opponentUserId).getScore();
-
-        if (playerScore > opponentScore) {
-          sendGameOver(game, userId, opponentUserId);
-        } else {
-          sendGameOver(game, opponentUserId, userId);
-        }
-      }
-    }
-  } else {
-    console.log(`No play data found for User ID: ${userId}`);
-  }
-}
-
 // 몬스터 공격 처리
 function handleMonsterBaseAttack(socket, userId, payload) {
   const playerData = getPlayData(userId);
@@ -99,18 +59,21 @@ function handleMonsterBaseAttack(socket, userId, payload) {
   playerData.setBaseHp(playerData.getBaseHp() - payload.damage);
   sendGameSync(socket, userId, PacketType.S2C_UPDATE_BASE_HP, { playerBaseHp: playerData.getBaseHp() });
 
+  const opponentUserId = playerData.opponentUserInfo;
+  const opponentClient = CLIENTS[opponentUserId];
+  
+
   // baseHp가 0이 되면 게임 오버 패킷 전송
   if (playerData.getBaseHp() <= 0) {
-    const game = getGameByUserId(userId);
+    const game = userId;
     if (game) {
-      const opponentUserId = game.opponentUserInfo.userId === userId ? game.opponentUserInfo.opponentUserId : game.opponentUserInfo.userId;
       const playerScore = playerData.getScore();
       const opponentScore = getPlayData(opponentUserId).getScore();
 
       if (playerScore > opponentScore) {
-        sendGameOver(game, userId, opponentUserId);
+        sendGameOver(socket, opponentClient, userId, opponentUserId);
       } else {
-        sendGameOver(game, opponentUserId, userId);
+        sendGameOver(opponentClient, socket, opponentUserId, userId);
       }
     }
   }
@@ -162,4 +125,4 @@ function checkGameOver(userId) {
   }
 }
 
-export { handleBaseHpUpdate, handleMonsterBaseAttack, handleGameEnd, sendGameOver, checkGameOver };
+export { handleMonsterBaseAttack, handleGameEnd, sendGameOver, checkGameOver };
