@@ -2,13 +2,9 @@ import { getPlayData, getGameByUserId } from '../models/playData.model.js';
 import { prisma } from '../utils/prisma/index.js';
 import { PacketType } from '../constants.js';
 import { sendGameSync } from './gameSyncHandler.js';
-import { CLIENTS } from './matchMakingHandler.js';
+import { CLIENTS } from './matchMakingHandler.js'; 
 
-let isGameOver = false;
-// 게임 오버 패킷 생성 및 전송
-function sendGameOver(winnerSocket, loserSocket, winnerId, loserId) {
-  isGameOver = true;
-
+function sendGameOver(game, winnerId, loserId) {
   const winnerPacket = {
     packetType: PacketType.S2C_GAME_OVER_NOTIFICATION,
     isWin: true,
@@ -23,107 +19,133 @@ function sendGameOver(winnerSocket, loserSocket, winnerId, loserId) {
     finalScore: getPlayData(loserId).getScore(),
   };
 
-  winnerSocket.emit('event', winnerPacket);
-  loserSocket.emit('event', loserPacket);
 
-  saveScore(winnerId, getPlayData(winnerId).getScore());
-  saveScore(loserId, getPlayData(loserId).getScore());
+  console.log(`Sending game over packet to winner: ${winnerId} and loser: ${loserId}`);
+
+  const winnerSocket = CLIENTS[winnerId];
+  const loserSocket = CLIENTS[loserId];
+
+  if (winnerSocket && loserSocket) {
+    console.log(`Sending winner packet: ${JSON.stringify(winnerPacket)}`);
+    console.log(`Sending loser packet: ${JSON.stringify(loserPacket)}`);
+
+    winnerSocket.emit('event', winnerPacket);
+    loserSocket.emit('event', loserPacket);
+
+    saveScore(winnerId, getPlayData(winnerId).getScore(), winnerSocket);  // Add socket parameter
+    saveScore(loserId, getPlayData(loserId).getScore(), loserSocket);  // Add socket parameter
+  } else {
+    console.error(`Socket not found for winner: ${winnerId} or loser: ${loserId}`);
+  }
 }
 
-function saveScore(userId, finalScore) {
-  console.log(`Saving score for user: ${userId}, score: ${finalScore}`);
-  prisma.user
-    .findUnique({ where: { userId }, include: { userInfo: true } })
-    .then((user) => {
-      let highScore = 0;
 
-      if (!user.userInfo) {
-        console.log('없음');
-        prisma.userInfo.create({
-          data: {
-            userId,
-            highScore: '0',
-            win: '0', // 초기화 필요한 필드 설정
-            lose: '0',
-          },
-        });
-      } else {
-        console.log('있음');
-        highScore = user.userInfo.highScore;
+function saveScore(userId, finalScore, socket) {
+  console.log(`Saving score for user: ${userId}, score: ${finalScore}`);
+  prisma.user.findUnique({ where: { userId }, include: { userInfo: true } })
+    .then(user => {
+      if (!user || !user.userInfo) {
+        throw new Error(`User or userInfo not found for userId: ${userId}`);
       }
+      const highScore = parseInt(user.userInfo.highScore || '0', 10);
 
       console.log(`Current high score: ${highScore}`);
 
-      if (finalScore > parseInt(highScore, 10)) {
+      if (finalScore > highScore) {
         return prisma.userInfo.update({
           where: { userId },
-          data: { highScore: finalScore.toString() },
+          data: { highScore: finalScore },  // Int 타입으로 전달
         });
       }
     })
     .then(() => {
       console.log(`New high score set for user: ${userId}, score: ${finalScore}`);
+      socket.emit('gameEnd', { success: true });
     })
     .catch((error) => {
       console.error('Error saving score:', error);
+      socket.emit('gameEnd', { success: false, message: 'Internal server error' });
     });
 }
 
-// 몬스터 공격 처리
+function handleBaseHpUpdate(socket, data) {
+  const { userId, baseHp } = data;
+  const playerData = getPlayData(userId);
+  if (playerData) {
+    playerData.setBaseHp(baseHp);
+    console.log(`Broadcasting base HP update: User ID: ${userId}, Base HP: ${baseHp}`);
+    socket.broadcast.emit('event', {
+      packetType: PacketType.S2C_UPDATE_BASE_HP,
+      userId: userId,
+      baseHp: baseHp,
+    });
+
+    if (playerData.getBaseHp() <= 0) {
+      const game = getGameByUserId(userId);
+      if (game) {
+        const opponentUserId = game.player1.userId === userId ? game.player2.userId : game.player1.userId;
+        const playerScore = playerData.getScore();
+        const opponentScore = getPlayData(opponentUserId)?.getScore();
+
+        if (opponentScore === undefined) {
+          console.error(`Opponent score not found for User ID: ${opponentUserId}`);
+          return;
+        }
+
+        if (playerScore > opponentScore) {
+          sendGameOver(game, userId, opponentUserId);
+        } else {
+          sendGameOver(game, opponentUserId, userId);
+        }
+      } else {
+        console.log(`No game found for User ID: ${userId}`);
+      }
+    }
+  } else {
+    console.log(`No play data found for User ID: ${userId}`);
+  }
+}
+
 function handleMonsterBaseAttack(socket, userId, payload) {
   const playerData = getPlayData(userId);
+  const newBaseHp = playerData.getBaseHp() - payload.damage;
+  playerData.setBaseHp(newBaseHp);
+  sendGameSync(socket, userId, PacketType.S2C_UPDATE_BASE_HP, { playerBaseHp: playerData.getBaseHp() });
 
-  playerData.setBaseHp(playerData.getBaseHp() - payload.damage);
-  sendGameSync(socket, userId, PacketType.S2C_UPDATE_BASE_HP, {
-    playerBaseHp: playerData.getBaseHp(),
-  });
-
-  const opponentUserId = playerData.opponentUserInfo;
-  const opponentClient = CLIENTS[opponentUserId];
-
-  if (isGameOver) {
-    return;
-  }
-
-  // baseHp가 0이 되면 게임 오버 패킷 전송
-  if (playerData.getBaseHp() <= 0) {
-    const game = userId;
+  if (newBaseHp <= 0) {
+    const game = getGameByUserId(userId);
     if (game) {
+      const opponentUserId = game.player1.userId === userId ? game.player2.userId : game.player1.userId;
       const playerScore = playerData.getScore();
-      const opponentScore = getPlayData(opponentUserId).getScore();
+      const opponentScore = getPlayData(opponentUserId)?.getScore();
+
+      if (opponentScore === undefined) {
+        console.error(`Opponent score not found for User ID: ${opponentUserId}`);
+        return;
+      }
 
       if (playerScore > opponentScore) {
         sendGameOver(socket, opponentClient, userId, opponentUserId);
       } else {
         sendGameOver(opponentClient, socket, opponentUserId, userId);
       }
+    } else {
+      console.log(`No game found for User ID: ${userId}`);
     }
   }
 }
 
-// 게임 종료 요청 처리
 function handleGameEnd(socket, userId, packet) {
   const { score } = packet;
   console.log(`Saving score for user: ${userId}, score: ${score}`);
-
-  prisma.user
-    .findUnique({ where: { userId }, include: { userInfo: true } })
-    .then((user) => {
-      let highScore = 0;
-
-      if (!prisma.userInfo) {
-        console.log('없음 수신');
-        prisma.userInfo.create({
-          data: {
-            userId,
-            highScore: '0',
-            win: '0', // 초기화 필요한 필드 설정
-            lose: '0',
-          },
-        });
-      } else {
-        highScore = parseInt(user.userInfo.highScore || '0', 10);
+  prisma.user.findUnique({ where: { userId }, include: { userInfo: true } })
+    .then(user => {
+      if (!user || !user.userInfo) {
+        throw new Error(`User or userInfo not found for userId: ${userId}`);
       }
+
+      const highScore = parseInt(user.userInfo.highScore || '0', 10);
+      console.log(`Current high score: ${highScore}`);
 
       console.log(`Current high score: ${highScore}`);
       if (score > highScore) {

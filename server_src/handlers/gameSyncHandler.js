@@ -1,6 +1,3 @@
-import pkg from 'cycle';
-const { decycle, retrocycle } = pkg;
-
 import { PacketType } from '../constants.js';
 import { getPlayData } from '../models/playData.model.js';
 import { CLIENTS } from './matchMakingHandler.js';
@@ -11,8 +8,18 @@ function sendGameSync(socket, userId, packetType, payload) {
     payload;
 
   const playerData = getPlayData(userId);
+  if (!playerData) {
+    console.error(`Player data not found for User ID: ${userId}`);
+    return;
+  }
+
   const opponentPlayerId = playerData.getOpponentInfo();
   const opponentClient = CLIENTS[opponentPlayerId];
+
+  if (!opponentClient) {
+    console.error(`Opponent client not found for opponent User ID: ${opponentPlayerId}`);
+    return;
+  }
 
   const playerPacket = {
     packetType: PacketType.S2C_GAMESYNC,
@@ -20,7 +27,7 @@ function sendGameSync(socket, userId, packetType, payload) {
       gold: playerData.getGold(),
       score: playerData.getScore(),
       attackedMonster,
-      baseHp: playerData.baseHp,
+      baseHp: playerData.getBaseHp(),
     },
   };
 
@@ -29,19 +36,15 @@ function sendGameSync(socket, userId, packetType, payload) {
     data: {
       opponentTowers: mainTowers,
       opponentMonsters: mainMonsters,
-      opponentBaseHp: playerData.baseHp,
+      opponentBaseHp: playerData.getBaseHp(),
       attackedOpponentMonster: attackedMonster,
       attackedOpponentTower: attackedTower,
       destroyedOpponentMonsterIndex: destroyedMonsterIndex,
     },
   };
 
-  socket.emit('gameSync', retrocycle(decycle(playerPacket)));
-  if (opponentClient) {
-    opponentClient.emit('gameSync', retrocycle(decycle(opponentPacket)));
-  } else {
-    console.error(`Opponent client not found for player ID: ${opponentPlayerId}`);
-  }
+  socket.emit('gameSync', playerPacket);
+  opponentClient.emit('gameSync', opponentPacket);
 }
 
 export { sendGameSync };
