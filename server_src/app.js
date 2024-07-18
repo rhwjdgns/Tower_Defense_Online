@@ -22,7 +22,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 //현재 접속한 유저들의 세션 담기
 export const activeSessions = {};
 
-
 // 특정 도메인만 허용하는 CORS 설정
 const corsOptions = {
   origin: '*', // 허용하고자 하는 도메인
@@ -111,6 +110,50 @@ app.post('/api/login', async (req, res) => {
     activeSessions[user.userId] = token;
 
     res.status(200).json({ token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/api/saveScore', async (req, res) => {
+  const { userId, score } = req.body;
+  console.log(`Saving score for user: ${userId}, score: ${score}`);
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      include: { userInfo: true },
+    });
+
+    const highScore = user.userInfo.highScore || 0;
+    console.log(`Current high score: ${highScore}`);
+
+    if (score > highScore) {
+      await prisma.userInfo.update({
+        where: { userId },
+        data: { highScore: score },
+      });
+      console.log(`New high score set for user: ${userId}, score: ${score}`);
+    }
+
+    res.status(200).json({ message: 'Score saved successfully' });
+  } catch (error) {
+    console.error('Error saving score:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/api/getHighScore', async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { userInfo: { select: { highScore: true } } },
+    });
+
+    res.status(200).json({ highScore: user?.userInfo?.highScore });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
