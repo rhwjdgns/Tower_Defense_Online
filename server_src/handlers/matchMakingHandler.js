@@ -3,21 +3,20 @@ import { createPlayData, GameData, getPlayData } from '../models/playData.model.
 import { createTowers, setTower } from '../models/tower.model.js';
 let queue = [];
 let CLIENTS = {};
+
 function generateRandomMonsterPath() {
   const canvasHeight = RESOLUTION_HEIGHT;
   const canvasWidth = RESOLUTION_WIDTH;
   const path = [];
   let currentX = 0;
-  let currentY = Math.floor(Math.random() * 21) + 500; // 500 ~ 520 범위의 y 시작 (캔버스 y축 중간쯤에서 시작할 수 있도록 유도)
+  let currentY = Math.floor(Math.random() * 21) + 500;
   path.push({ x: currentX, y: currentY });
   while (currentX < canvasWidth) {
-    currentX += Math.floor(Math.random() * 100) + 50; // 50 ~ 150 범위의 x 증가
-    // x 좌표에 대한 clamp 처리
+    currentX += Math.floor(Math.random() * 100) + 50;
     if (currentX > canvasWidth) {
       currentX = canvasWidth;
     }
-    currentY += Math.floor(Math.random() * 200) - 100; // -100 ~ 100 범위의 y 변경
-    // y 좌표에 대한 clamp 처리
+    currentY += Math.floor(Math.random() * 200) - 100;
     if (currentY < 0) {
       currentY = 0;
     }
@@ -49,7 +48,6 @@ function getRandomPositionNearPath(maxDistance, monsterPath) {
   };
 }
 
-//**대결 신칭 & 시작 핸들러 **//
 function handleMatchRequest(socket, data) {
   const { userId } = data;
   console.log(`매치 요청을 보낸 유저 ID: ${userId}`);
@@ -58,7 +56,7 @@ function handleMatchRequest(socket, data) {
   queue.push({ socket, userId });
   console.log(`현재 대기열 상태: ${queue.map((user) => user.userId).join(', ')}`);
   
-  //대기열에 2명 있으면 대기열에서 게임으로 푸쉬 
+  // 대기열에 2명 있으면 대기열에서 게임으로 푸쉬 
   if (queue.length >= 2) {
     const player1 = queue.shift();
     const player2 = queue.shift();
@@ -67,17 +65,16 @@ function handleMatchRequest(socket, data) {
 
     console.log(`매칭 성공: ${player1.userId} vs ${player2.userId}`);
     
-    //대기 시작 패킷 
+    // 대기 시작 패킷 
     const packet = {
       packetType: PacketType.S2C_MATCH_FOUND_NOTIFICATION,
       opponentId: player2.userId,
     };
-    //타워 생성
+    // 타워 생성
     createTowers(player1.userId);
     createTowers(player2.userId);
 
-
-    //게임초기값 (monster path, initial towers, game data)
+    // 게임 초기값 (monster path, initial towers, game data)
     const initialHp = 100; // 초기 base HP 값
     const player1MonsterPath = generateRandomMonsterPath();
     const player2MonsterPath = generateRandomMonsterPath();
@@ -131,7 +128,7 @@ function handleMatchRequest(socket, data) {
       opponentBaseHp: initialHp
     };
     
-    //대기 시작 & 게임 초기 값 packet & socket 전송
+    // 대기 시작 & 게임 초기 값 packet & socket 전송
     player1.socket.emit('event', packet, player1Payload);
     player2.socket.emit('event', { ...packet, opponentId: player1.userId }, player2Payload);
   }

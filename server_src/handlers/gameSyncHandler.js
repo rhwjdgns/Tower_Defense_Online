@@ -1,3 +1,6 @@
+import pkg from 'cycle';
+const { decycle, retrocycle } = pkg;
+
 import { PacketType } from '../constants.js';
 import { getPlayData } from '../models/playData.model.js';
 import { CLIENTS } from './matchMakingHandler.js';
@@ -33,8 +36,12 @@ function sendGameSync(socket, userId, packetType, payload) {
     },
   };
 
-  socket.emit('gameSync', playerPacket);
-  opponentClient.emit('gameSync', opponentPacket);
+  socket.emit('gameSync', retrocycle(decycle(playerPacket)));
+  if (opponentClient) {
+    opponentClient.emit('gameSync', retrocycle(decycle(opponentPacket)));
+  } else {
+    console.error(`Opponent client not found for player ID: ${opponentPlayerId}`);
+  }
 }
 
 export { sendGameSync };
