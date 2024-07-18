@@ -1,5 +1,4 @@
-const playData = {}; //모든 게임 데이터 목록
-//playData[userId] = {playData: playData}
+const playData = {}; // 모든 게임 데이터 목록
 
 export const createPlayData = (uuid, initData) => {
   playData[uuid] = initData;
@@ -15,10 +14,23 @@ export const setBaseHp = (uuid, data) => {
 
 export const setGold = (uuid, data) => {
   return (playData[uuid].setGold(data.gold));
-}
+};
 
 export const clearPlayData = (uuid) => {
   delete playData[uuid];
+};
+
+export const getGameByUserId = (userId) => {
+  // 모든 게임 객체를 순회하며 userId가 포함된 게임 객체를 찾음
+  for (const [uuid, game] of Object.entries(playData)) {
+    if (uuid === userId || game.opponentUserInfo === userId) {
+      return {
+        player1: { userId: uuid, data: game },
+        player2: { userId: game.opponentUserInfo, data: getPlayData(game.opponentUserInfo) }
+      };
+    }
+  }
+  return null;
 };
 
 export class GameData {
@@ -59,7 +71,7 @@ export class GameData {
   getGold() {
     return this.userGold;
   }
-  
+
   setBaseHp(value) {
     this.baseHp = value;
   }

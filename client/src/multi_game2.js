@@ -24,15 +24,14 @@ const progressBarMessage = document.getElementById('progressBarMessage');
 const progressBar = document.getElementById('progressBar');
 const loader = document.getElementsByClassName('loader')[0];
 
-const NUM_OF_MONSTERS = 5; // 몬스터 개수
-let intervalId = null; //몬스터 생성 주기
+const NUM_OF_MONSTERS = 5;
+let intervalId = null; // 몬스터 생성 주기
 let killCount = 0; // 몬스터 잡은 횟수
 // 게임 데이터
-let towerCost = 500; // 타워 구입 비용
-let monsterSpawnInterval = 3000; // 몬스터 생성 주기
+let towerCost = 500;
+let monsterSpawnInterval = 3000;
 let towerIndex = 1;
 let monsterIndex = 1;
-
 // 유저 데이터
 let userGold = 0;
 let base;
@@ -79,7 +78,6 @@ opponentMonsterPath = opponentMonsterPath || [];
 opponentInitialTowerCoords = opponentInitialTowerCoords || [];
 opponentBasePosition = opponentBasePosition || { x: 0, y: 0 };
 let bgm;
-
 function initMap() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
   drawPath(monsterPath, ctx);
@@ -145,8 +143,8 @@ function placeInitialTowers(initialTowerCoords, initialTowers, context) {
     const tower = new Tower(towerCoords.x, towerCoords.y);
     tower.setTowerIndex(initTowerIndex);
     initialTowers.push(tower);
-
     initTowerIndex++;
+
     tower.draw(context, towerImage);
   });
 }
@@ -191,12 +189,11 @@ function placeBase(position, isPlayer) {
     }
   } else {
     if (!opponentBase) {
-      opponentBase = new Base(position.x, position.y, opponentBaseHp);
+      opponentBase = new Base(position.x, position.y, baseHp);
       opponentBase.draw(opponentCtx, baseImage, true);
     }
   }
 }
-
 function spawnMonster() {
   const monster = new Monster(monsterPath, monsterImages, monsterLevel);
   monster.setMonsterIndex(monsterIndex);
@@ -215,7 +212,6 @@ function spawnOpponentMonster(value) {
   newMonster.setMonsterIndex(value[value.length - 1].monsterIndex);
   opponentMonsters.push(newMonster);
 }
-
 function destroyOpponentMonster(index) {
   const destroyedMonsterIndex = opponentMonsters.findIndex((monster) => {
     return monster.getMonsterIndex() === index;
@@ -224,7 +220,7 @@ function destroyOpponentMonster(index) {
   opponentMonsters.splice(destroyedMonsterIndex, 1);
 }
 function gameSync(data) {
-  //예외 처리 부분
+  // 예외 처리 부분
   score = data.score;
   userGold = data.gold;
   baseHp = data.baseHp;
@@ -238,10 +234,11 @@ function gameSync(data) {
     return monster.getMonsterIndex() === data.attackedMonster.monsterIndex;
   });
 
-  attackedMonster.setHp(data.attackedMonster.hp);
-  // console.log(
-  //   `맞은 놈 번호 : ${attackedMonster.getMonsterIndex()}   갱신된 체력 : ${attackedMonster.getHp()}`,
-  // );
+  if (attackedMonster) {
+    attackedMonster.setHp(data.attackedMonster.hp);
+  } else {
+    console.error('Monster not found:', data.attackedMonster.monsterIndex);
+  }
 }
 function gameLoop() {
   // 내 게임 캔버스 그리기
@@ -256,6 +253,7 @@ function gameLoop() {
   ctx.fillText(`골드: ${userGold}`, 100, 150);
   ctx.fillStyle = 'black';
   ctx.fillText(`현재 레벨: ${monsterLevel}`, 100, 200);
+
   towers.forEach((tower) => {
     tower.draw(ctx, towerImage);
     tower.updateCooldown();
@@ -295,13 +293,16 @@ function gameLoop() {
         sendEvent(PacketType.C2S_MONSTER_ATTACK_BASE, { damage: monster.Damage() });
 
         // baseHp가 0이 되면 게임 오버
-        if (baseHp <= 0) {
-          alert('Game Over');
-          return;
-        }
+      if (baseHp <= 0) {
+        serverSocket.emit('event', {
+          packetType: PacketType.C2S_GAME_END_REQUEST,
+          userId: localStorage.getItem('userId2'),
+          payload: { score }
+        });
+        return;
+      }
       }
     } else {
-      // TODO. 몬스터 사망 이벤트 전송
       monsters.splice(i, 1);
       sendEvent(PacketType.C2S_DIE_MONSTER, {
         monsterIndex: monster.getMonsterIndex(),
@@ -353,6 +354,18 @@ function initGame(payload) {
   if (isInitGame) {
     return;
   }
+
+  fetch('/api/getHighScore', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+  .then((response) => response.json())
+  .then((data) => {
+    highScore = data.highScore || 0;
+  })
+  .catch((error) => console.error('Error fetching high score:', error));
+
   userGold = payload.userGold;
   baseHp = payload.baseHp;
   monsterPath = payload.monsterPath;
@@ -361,8 +374,10 @@ function initGame(payload) {
   opponentMonsterPath = payload.opponentMonsterPath;
   opponentInitialTowerCoords = payload.opponentInitialTowerCoords;
   opponentBasePosition = payload.opponentBasePosition;
+  opponentBaseHp = payload.opponentBaseHp;
   opponentBase = new Base(opponentBasePosition.x, opponentBasePosition.y, baseHp);
   opponentBase.draw(opponentCtx, baseImage, true);
+  opponentBaseHp = payload.baseHp;
 
   bgm = new Audio('sounds/bgm.mp3');
   bgm.loop = true;
@@ -373,7 +388,6 @@ function initGame(payload) {
   gameLoop();
   isInitGame = true;
 }
-
 Promise.all([
   new Promise((resolve) => (opponentBackgroundImage.onload = resolve)),
   new Promise((resolve) => (backgroundImage.onload = resolve)),
@@ -426,27 +440,76 @@ Promise.all([
         }
       }, 300);
     }
-  });
 
-  serverSocket.on('gameOver', (data) => {
-    bgm.pause();
-    const { isWin, message } = data;
-    const winSound = new Audio('sounds/win.wav');
-    const loseSound = new Audio('sounds/lose.wav');
-    winSound.volume = 0.3;
-    loseSound.volume = 0.3;
-    if (isWin) {
-      winSound.play().then(() => {
-        alert(message);
-        sendGameEnd();
-      });
-    } else {
-      loseSound.play().then(() => {
-        alert(message);
-        sendGameEnd();
+    if (data.packetType === PacketType.S2C_GAME_OVER_NOTIFICATION) {
+      console.log('Game over notification received:', data); 
+      bgm.pause();
+      const { isWin, message } = data;
+      const winSound = new Audio('sounds/win.wav');
+      const loseSound = new Audio('sounds/lose.wav');
+      winSound.volume = 0.3;
+      loseSound.volume = 0.3;
+    
+      const alertMessage = isWin ? 'Victory! ' : 'Defeat! ';
+      const finalMessage = alertMessage + message;
+    
+      const soundToPlay = isWin ? winSound : loseSound;
+      soundToPlay.play().then(() => {
+        showAlertAndSaveScore(finalMessage);
       });
     }
   });
+  
+  function showAlertAndSaveScore(message) {
+    const finalScore = score; // 최종 점수 저장
+    fetch('/api/saveScore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, score: finalScore }),
+    }).then(response => response.json())
+      .then(data => {
+        console.log('Score save response:', data);
+        if (data.message === 'Score saved successfully') {
+          console.log('Score saved successfully');
+        } else {
+          console.error('Failed to save score:', data.message);
+        }
+        showAlertAndRedirect(message);
+      }).catch(error => {
+        console.error('Error saving score:', error);
+        showAlertAndRedirect(message);
+      });
+  }
+  
+  function showAlertAndRedirect(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.style.position = 'absolute';
+    alertDiv.style.top = '50%';
+    alertDiv.style.left = '50%';
+    alertDiv.style.transform = 'translate(-50%, -50%)';
+    alertDiv.style.padding = '20px';
+    alertDiv.style.backgroundColor = 'white';
+    alertDiv.style.border = '1px solid black';
+    alertDiv.style.textAlign = 'center';
+    alertDiv.style.zIndex = '1000';
+  
+    const alertMessage = document.createElement('p');
+    alertMessage.textContent = message;
+  
+    const okButton = document.createElement('button');
+    okButton.textContent = 'OK';
+    okButton.style.marginTop = '10px';
+    okButton.style.padding = '5px 10px';
+    okButton.style.fontSize = '16px';
+    okButton.style.cursor = 'pointer';
+    okButton.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+  
+    alertDiv.appendChild(alertMessage);
+    alertDiv.appendChild(okButton);
+    document.body.appendChild(alertDiv);
+  }
 
   serverSocket.on('gameSync', (packet) => {
     switch (packet.packetType) {
@@ -483,11 +546,33 @@ buyTowerButton.style.display = 'none';
 buyTowerButton.addEventListener('click', placeNewTower);
 document.body.appendChild(buyTowerButton);
 
+function decycle(obj, stack = []) {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (stack.includes(obj)) {
+    return null; // 순환 참조를 제거하고 null로 대체
+  }
+
+  const newStack = stack.concat([obj]);
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => decycle(item, newStack));
+  }
+
+  return Object.keys(obj).reduce((acc, key) => {
+    acc[key] = decycle(obj[key], newStack);
+    return acc;
+  }, {});
+}
+
 function sendEvent(handlerId, payload) {
+  const decycledPayload = decycle(payload); // 순환 참조 제거
   serverSocket.emit('event', {
     userId,
     clientVersion: CLIENT_VERSION,
     packetType: handlerId,
-    payload,
+    payload: decycledPayload, // 순환 참조가 제거된 객체를 전송
   });
 }
