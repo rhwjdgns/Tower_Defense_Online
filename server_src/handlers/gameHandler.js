@@ -9,15 +9,16 @@ function sendGameOver(game, winnerId, loserId) {
     packetType: PacketType.S2C_GAME_OVER_NOTIFICATION,
     isWin: true,
     message: 'You won!',
-    finalScore: getPlayData(winnerId).getScore()
+    finalScore: getPlayData(winnerId).getScore(),
   };
 
   const loserPacket = {
     packetType: PacketType.S2C_GAME_OVER_NOTIFICATION,
     isWin: false,
     message: 'You lost!',
-    finalScore: getPlayData(loserId).getScore()
+    finalScore: getPlayData(loserId).getScore(),
   };
+
 
   console.log(`Sending game over packet to winner: ${winnerId} and loser: ${loserId}`);
 
@@ -47,6 +48,7 @@ function saveScore(userId, finalScore, socket) {
         throw new Error(`User or userInfo not found for userId: ${userId}`);
       }
       const highScore = parseInt(user.userInfo.highScore || '0', 10);
+
       console.log(`Current high score: ${highScore}`);
 
       if (finalScore > highScore) {
@@ -60,7 +62,7 @@ function saveScore(userId, finalScore, socket) {
       console.log(`New high score set for user: ${userId}, score: ${finalScore}`);
       socket.emit('gameEnd', { success: true });
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Error saving score:', error);
       socket.emit('gameEnd', { success: false, message: 'Internal server error' });
     });
@@ -123,9 +125,9 @@ function handleMonsterBaseAttack(socket, userId, payload) {
       }
 
       if (playerScore > opponentScore) {
-        sendGameOver(game, userId, opponentUserId);
+        sendGameOver(socket, opponentClient, userId, opponentUserId);
       } else {
-        sendGameOver(game, opponentUserId, userId);
+        sendGameOver(opponentClient, socket, opponentUserId, userId);
       }
     } else {
       console.log(`No game found for User ID: ${userId}`);
@@ -136,7 +138,6 @@ function handleMonsterBaseAttack(socket, userId, payload) {
 function handleGameEnd(socket, userId, packet) {
   const { score } = packet;
   console.log(`Saving score for user: ${userId}, score: ${score}`);
-
   prisma.user.findUnique({ where: { userId }, include: { userInfo: true } })
     .then(user => {
       if (!user || !user.userInfo) {
@@ -146,7 +147,9 @@ function handleGameEnd(socket, userId, packet) {
       const highScore = parseInt(user.userInfo.highScore || '0', 10);
       console.log(`Current high score: ${highScore}`);
 
+      console.log(`Current high score: ${highScore}`);
       if (score > highScore) {
+        console.log('있음 수신');
         return prisma.userInfo.update({
           where: { userId },
           data: { highScore: score.toString() },
@@ -157,7 +160,7 @@ function handleGameEnd(socket, userId, packet) {
       console.log(`New high score set for user: ${userId}, score: ${score}`);
       socket.emit('gameEnd', { success: true });
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Error saving score:', error);
       socket.emit('gameEnd', { success: false, message: 'Internal server error' });
     });
@@ -182,4 +185,4 @@ function checkGameOver(userId) {
   }
 }
 
-export { handleBaseHpUpdate, handleMonsterBaseAttack, handleGameEnd, sendGameOver, checkGameOver };
+export { handleMonsterBaseAttack, handleGameEnd, sendGameOver, checkGameOver };
